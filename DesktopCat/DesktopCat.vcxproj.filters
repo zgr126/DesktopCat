@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Direct2D窗口">
+      <UniqueIdentifier>{418d2f39-ddc3-4484-9642-acd88a23cb13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Node节点">
+      <UniqueIdentifier>{e7101ecf-42de-4fc2-a3b0-97320f05d0e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat猫">
+      <UniqueIdentifier>{29f04bd8-5c35-455c-9ec6-13ab07238fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat猫\Animation动画">
+      <UniqueIdentifier>{080d1f5d-17dc-487d-8bb7-53b6d81771a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LoadImage加载图片">
+      <UniqueIdentifier>{450c1acc-f76d-45fa-908f-7366e43d1a52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IO文件读写操作">
+      <UniqueIdentifier>{9c30b15b-6257-4c40-9dbd-bf19a17c423d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main程序入口">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Timer计时器">
+      <UniqueIdentifier>{7ef7c86c-0229-4990-a8a3-3abca287a145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tool工具">
+      <UniqueIdentifier>{8fce803d-dbab-4610-81be-32b7ee0d58bf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DesktopCat.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GlassWindows.h">
+      <Filter>Direct2D窗口</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>Node节点</Filter>
+    </ClInclude>
+    <ClInclude Include="Sprite.h">
+      <Filter>Cat猫</Filter>
+    </ClInclude>
+    <ClInclude Include="Cat.h">
+      <Filter>Cat猫</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadImage.h">
+      <Filter>LoadImage加载图片</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Cat猫\Animation动画</Filter>
+    </ClInclude>
+    <ClInclude Include="LFile.h">
+      <Filter>IO文件读写操作</Filter>
+    </ClInclude>
+    <ClInclude Include="NoMemberFunction.h">
+      <Filter>IO文件读写操作</Filter>
+    </ClInclude>
+    <ClInclude Include="Statement.h">
+      <Filter>IO文件读写操作</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Timer计时器</Filter>
+    </ClInclude>
+    <ClInclude Include="Tool.h">
+      <Filter>Tool工具</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DesktopCat.cpp">
+      <Filter>main程序入口</Filter>
+    </ClCompile>
+    <ClCompile Include="GlassWindows.cpp">
+      <Filter>Direct2D窗口</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>Node节点</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite.cpp">
+      <Filter>Cat猫</Filter>
+    </ClCompile>
+    <ClCompile Include="Cat.cpp">
+      <Filter>Cat猫</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadImage.cpp">
+      <Filter>LoadImage加载图片</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Cat猫\Animation动画</Filter>
+    </ClCompile>
+    <ClCompile Include="LFile.cpp">
+      <Filter>IO文件读写操作</Filter>
+    </ClCompile>
+    <ClCompile Include="NoMemberFunction.cpp">
+      <Filter>IO文件读写操作</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Timer计时器</Filter>
+    </ClCompile>
+    <ClCompile Include="Tool.cpp">
+      <Filter>Tool工具</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DesktopCat.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="DesktopCat.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
