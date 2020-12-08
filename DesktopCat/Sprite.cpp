@@ -1,5 +1,7 @@
 #include "Sprite.h"
+#include "GlassWindows.h"
 #include "Animation.h"
+#include "Action.h"
 
 LLoadImage* LSprite::g_LoadImage = nullptr;
 
@@ -95,9 +97,11 @@ void LSprite::Update()
 			//如果存在，直接将定时器初始化。效率更高
 			m_AnimationTimer->Reset();
 		}
+		//只更新队列的第一个动画
+		m_AnimationFront = m_AnimationDeque.front();
+		//每进入这个if语句，说明新的Animation即将开始，所以在此处创建Action
+		m_Action = LAction::create(this, m_AnimationFront->GetActionTextLine());		//Action运行原理是直接移动窗口，不需要移动精灵。在GlassWindow中更新窗口位置。
 	}
-	//只更新队列的第一个动画
-	m_AnimationFront = m_AnimationDeque.front();
 	if (m_AnimationFront)
 	{
 		//将定时器借给Animation使用
@@ -109,6 +113,8 @@ void LSprite::Update()
 			auto FutileAnimation = m_AnimationDeque.front();
 			LAnimation::release(&FutileAnimation);
 			m_AnimationDeque.pop_front();
+			//释放动画的同时释放Action数据
+			LAction::release(&m_Action);
 			return;
 		}
 		SetDrawArea(Area);

@@ -2,8 +2,6 @@
 #include "DesktopCat.h"
 #include "Sprite.h"
 
-class GlassWindow;
-
 #define Cat_AnimationTimer_ID	10		//猫动画定时器独有ID
 
 class Cat :public LSprite
@@ -21,11 +19,9 @@ public:
 #pragma endregion
 
 private:
-	//由Cat控制的窗口
-	GlassWindow* m_GlassWndow;
 
 public:
-	void SetGlassWindow(GlassWindow* glassWindow) { m_GlassWndow = glassWindow; }
+
 };
 
 

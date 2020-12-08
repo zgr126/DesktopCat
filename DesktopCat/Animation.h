@@ -21,13 +21,14 @@ class LSprite;
 #define DataMarkerEnd				'@'			//终止符（用于标记数据结束）
 #endif
 //行格式
-#define GetFileData_BeginLine		2			//有效数据开始行数（动作组总数：即整张图片有多少组动作）
+#define GetFileData_Animation_BeginLine		2	//AnimationData.txt有效数据开始行数
 //有效数据参数格式
-#define GetFileData_CountLine		0			//第0个位置参数存放：该动画选自图片的第n行
-#define GetFileData_PlayOrder		1			//第1个位置参数存放：该动画一个周期内帧的切换顺序 如：(0,1,2,3)
-#define GetFileData_StayTime		2			//第2个位置参数存放：第1帧的停留时间...以此类推
-#define GetFileData_Style			3			//第3个位置参数存放：该动画风格，1为周期主导，2为时间主导，3为无限循环播放
-#define GetFileData_AddValue		4			//第4个位置参数存放：附加参数，当Style为1，2时需要指定附加参数，为3时请设为0
+#define GetFileData_Animation_CountLine		0		//第0个位置参数存放：该动画选自图片的第n行
+#define GetFileData_Animation_PlayOrder		1		//第1个位置参数存放：该动画一个周期内帧的切换顺序 如：(0,1,2,3)
+#define GetFileData_Animation_StayTime		2		//第2个位置参数存放：第1帧的停留时间...以此类推
+#define GetFileData_Animation_Style			3		//第3个位置参数存放：该动画风格，1为周期主导，2为时间主导，3为无限循环播放
+#define GetFileData_Animation_AddValue		4		//第4个位置参数存放：附加参数，当Style为1，2时需要指定附加参数，为3时请设为0
+#define GetFileData_Animation_Action		5		//第5个位置参数存放：该动画将使用AcionData.txt哪一行的数据
 
 #define M_To_MS		1000.0						//秒转毫秒
 
@@ -61,7 +62,9 @@ private:
 	//动画类型							(从文件获取)
 	LFileData<LAnimationStyle>	m_AnimationStyle;
 	//附加数据							(从文件获取)
-	LFileData<UINT> m_AddValue;		//当Style为周期主导时，AddValue代表循环次数。为时间主导时，AddValue为动画持续总时间。为无限循环时，AddValue为0
+	LFileData<UINT> m_AddValue;			//当Style为周期主导时，AddValue代表循环次数。为时间主导时，AddValue为动画持续总时间。为无限循环时，AddValue为0
+	//调用ActionData.txt哪一行的数据。	(从文件获取)
+	LFileData<UINT>	m_ActionTextLine;	//如果为0代表不读取ActionData.txt的内容(即原地不动)
 	//播放当前帧的索引	vector的索引
 	UINT m_FrameIndex;
 	//每帧停留时间的索引	vector的索引
@@ -75,6 +78,7 @@ private:
 	//动画播放是否结束
 	bool m_isEnd;
 	/*******************************************/
+	LSprite* m_Sprite;
 private:
 	//只能通过create方法创建LAnimation对象
 	LAnimation();
@@ -109,6 +113,7 @@ public:
 	//访问器
 	bool GetisEnd() { return m_isEnd; }
 	LAnimationStyle GetAnimationStyle() { return m_AnimationStyle.m_Val; }
+	UINT GetActionTextLine() { return  m_ActionTextLine.m_Val; }
 
 	friend class LSprite;
 };

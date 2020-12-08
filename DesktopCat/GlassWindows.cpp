@@ -174,8 +174,8 @@ void GlassWindow::initPet()
 	m_Cat->SetAnimationTimerID(Cat_AnimationTimer_ID);
 	m_Cat->SetAnchor({ 0 });
 	m_Cat->AddAnimation(3);
-	m_Cat->AddAnimation(2);
-	m_Cat->AddAnimation(4);
+	m_Cat->AddAnimation(20);
+	//m_Cat->AddAnimation(4);
 }
 
 void GlassWindow::initTray()

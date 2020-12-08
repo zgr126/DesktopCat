@@ -22,12 +22,14 @@ void LAnimation::release(LAnimation** pAnimation)
 	//OutputDebugString(L"删除即时动作！\n");
 }
 
-LAnimation::LAnimation() :m_AnimationStyle(LAnimationStyle::None), m_CountLine(0), m_AddValue(0)
+LAnimation::LAnimation() :m_AnimationStyle(LAnimationStyle::None), m_CountLine(0), m_AddValue(0), m_ActionTextLine(0), m_Sprite(nullptr)
 {
 }
 
 bool LAnimation::init(LSprite* pSprite)
 {
+	//保存精灵指针
+	m_Sprite = pSprite;
 	//保存动画数据文件路径	如：Assest\\Cat\\AnimationData.txt
 	m_AnimationDataFilePath = ParentPath + pSprite->GetName() + AnimationDataPath;
 	return true;
@@ -37,21 +39,8 @@ void LAnimation::release() { }
 
 void LAnimation::Censor()
 {
-	int Minus = m_vPlayOrder.size() - m_vStayTime.size();
-	if (Minus > 0)
-	{
-		for (int i = 0; i < Minus; ++i)
-		{
-			m_vStayTime.push_back(LFileData<UINT>(m_vStayTime.back().m_Val));
-		}
-	}
-	else if (Minus < 0)
-	{
-		for (int i = 0; i > Minus; --i)
-		{
-			m_vStayTime.pop_back();
-		}
-	}
+	//检查m_vStayTime
+	AdditionOrDeleteValue(m_vStayTime, m_vPlayOrder.size() - m_vStayTime.size());
 }
 
 void LAnimation::BeforeTheAnimationOfSpriteInit()
@@ -83,7 +72,7 @@ bool LAnimation::PlayAnimation(UINT fileLine)
 	LFile* pFile = LFile::AddToFilePool(m_AnimationDataFilePath);		//打开文件
 	//开始读取数据
 	string EntireData = LReadFileLine(pFile, fileLine);		//文件的第fileLine行全部数据
-	FractureBack(EntireData, DataMarkerEnd);		//去掉@后面的数据
+	FractureBack(EntireData, DataMarkerEnd);				//去掉@后面的数据
 	//读取第0个数据		图片第几行
 	string SingalData = GetFirst(EntireData, DataMarker);
 	m_CountLine = LDataConversion<UINT>::Conversion(SingalData);
@@ -99,7 +88,11 @@ bool LAnimation::PlayAnimation(UINT fileLine)
 	//读取第4个数据		附加数据
 	SingalData = GetFirst(EntireData, DataMarker);
 	m_AddValue = LDataConversion<UINT>::Conversion(SingalData);
+	//读取第5个数据		使用Action哪一行的数据
+	SingalData = GetFirst(EntireData, DataMarker);
+	m_ActionTextLine = LDataConversion<UINT>::Conversion(SingalData);
 	LFile::MoveOutFilePool(m_AnimationDataFilePath);					//关闭文件
+
 	//进行数据审查
 	Censor();
 	BeforeTheAnimationOfSpriteInit();

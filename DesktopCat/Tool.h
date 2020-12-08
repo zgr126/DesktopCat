@@ -97,6 +97,7 @@ namespace Lin
 	{
 		static LFileData<T> Conversion(string& str)
 		{
+			//atof函数会自动忽略空格。
 			return LFileData<T>((T)atof(str.c_str()));
 		}
 	};
@@ -122,5 +123,41 @@ namespace Lin
 		}
 	};
 
+	//string转wstring
 	std::wstring string2wstring(const std::string& str);
+
+#pragma region vector的增参与删参
+	//增加或删除vector元素	count>0增加若干元素，count<0删除若干元素
+	template<typename T>
+	void AdditionOrDeleteValue(vector<T> vec, int count)
+	{
+		if (count > 0)
+		{
+			PatchValue(vec, count);
+		}
+		else if(count < 0)
+		{
+			LeaveValue(vec, count);
+		}
+	}
+	//补参	拷贝并添加最后一个元素
+	template<typename T>
+	void PatchValue(vector<T>& vec, int count)
+	{
+		for (int i = 0; i < count; ++i)
+		{
+			vec.push_back(vec.back());
+		}
+	}
+	//删参
+	template<typename T>
+	void LeaveValue(vector<T>& vec, int count)
+	{
+		if (count > 0)	count *= -1;
+		for (int i = 0; i > count; --i)
+		{
+			vec.pop_back();
+		}
+	}
+#pragma endregion
 }

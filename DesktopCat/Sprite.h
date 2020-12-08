@@ -5,6 +5,7 @@
 #include "Timer.h"
 #include <deque>
 
+class GlassWindow;
 class LAnimation;
 class LAction;
 
@@ -40,6 +41,8 @@ protected:
 	int m_AnimationTimerID;
 	//精灵动作
 	LAction* m_Action;
+	//精灵控制的窗口
+	GlassWindow* m_GlassWndow;
 protected:
 	//重写基类虚函数
 	virtual bool init(const string&, const string&, const LPoint& size);
@@ -65,10 +68,12 @@ public:
 	D2D1_SIZE_U GetEntireSize() { return m_EntireSize; }
 	D2D1_SIZE_U GetSingalSize() { return m_SingalSize; }
 	int GetAnimationTimerID() { return m_AnimationTimerID; }
+	GlassWindow* GetGlassWindow() { return m_GlassWndow; }
 
 	void SetName(const string& name) { m_Name = name; }
 	void SetSuffix(const string& suffix) { m_Suffix = suffix; }
 	void SetEntireSize(D2D1_SIZE_U size) { m_EntireSize = size; }
 	void SetSingalSize(D2D1_SIZE_U size) { m_SingalSize = size; }
 	void SetAnimationTimerID(int id) { m_AnimationTimerID = id; }
+	void SetGlassWindow(GlassWindow* glassWindow) { m_GlassWndow = glassWindow; }
 };
