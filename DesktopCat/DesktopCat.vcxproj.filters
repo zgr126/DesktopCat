@@ -37,6 +37,9 @@
     <Filter Include="Tool工具">
       <UniqueIdentifier>{8fce803d-dbab-4610-81be-32b7ee0d58bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cat猫\Action动作">
+      <UniqueIdentifier>{3494fff2-ee16-4d18-875a-e93940d01c4f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -84,6 +87,9 @@
     <ClInclude Include="Tool.h">
       <Filter>Tool工具</Filter>
     </ClInclude>
+    <ClInclude Include="Action.h">
+      <Filter>Cat猫\Action动作</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DesktopCat.cpp">
@@ -118,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="Tool.cpp">
       <Filter>Tool工具</Filter>
+    </ClCompile>
+    <ClCompile Include="Action.cpp">
+      <Filter>Cat猫\Action动作</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

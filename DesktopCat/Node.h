@@ -1,4 +1,5 @@
 #pragma once
+#include "DesktopCat.h"
 struct LPoint final
 {
 	float m_x;
@@ -33,16 +34,17 @@ public:
 	//公开方法
 	LNode();
 
-	virtual void Draw() = 0;
+	virtual void Draw(ID2D1HwndRenderTarget*) = 0;
 	virtual void Update() = 0;
 
 public:
 	//访问器
 	LNode* GetNode() { return this; }
-	LPoint GetPosition() { return m_Position; }
+	LPoint virtual GetPosition() { return m_Position; }
 	LPoint GetAnchor() { return m_Anchor; }
 
 	void SetPosition(const LPoint& point) { m_Position = point; }
+	void SetAnchor(const LPoint& anchor) { m_Anchor = anchor; }
 
 };
 

@@ -11,8 +11,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+    LTimerManager::create();
     GWindow* GW = GWindow::create(hInstance);
     GW->run(nCmdShow);
     GWindow::release(&GW);
+    LTimerManager::release();
     return 1;
 }

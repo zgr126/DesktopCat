@@ -31,6 +31,11 @@ void LTimer::Update()
 {
 	Arrive();
 }
+
+void LTimer::Reset()
+{
+	Begin();
+}
 #pragma endregion
 
 
@@ -74,7 +79,7 @@ LTimer* LTimerManager::createTimer(UINT ID)
 		if (ID == timer->m_ID)
 		{
 			OutputDebugString(L"创建的定时器的ID重复");
-			return;
+			return nullptr;
 		}
 	}
 	LTimer* Timer = new LTimer(ID);

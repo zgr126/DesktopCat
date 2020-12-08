@@ -18,8 +18,8 @@ LPoint LPoint::operator-(const LPoint& _pt)
 LPoint LPoint::operator*(const LPoint& _pt)
 {
 	LPoint pt;
-	pt.m_x = this->m_x / _pt.m_x;
-	pt.m_y = this->m_y / _pt.m_y;
+	pt.m_x = this->m_x * _pt.m_x;
+	pt.m_y = this->m_y * _pt.m_y;
 	return pt;
 }
 LPoint LPoint::operator*(const float& _val)
@@ -70,7 +70,7 @@ void release(T _p)
 	_p = nullptr;
 }
 
-LNode::LNode() :m_Position(LPoint(0.0f, 0.0f)), m_Anchor(LPoint(0.0f, 0.0f))
+LNode::LNode() :m_Position(LPoint(0.0f, 0.0f)), m_Anchor(LPoint(0.5f, 0.5f))
 {
 }
 

@@ -23,6 +23,8 @@ protected:
 	void Arrive();			//计算从上一次Begin到此方法调用时间隔的时间
 	void Update();
 public:
+	//将计时器重置，重复利用
+	void Reset();
 	//访问器
 	ULONGLONG GetInterval() { return m_Interval; }		//上一次刷新到现在的时间间隔
 

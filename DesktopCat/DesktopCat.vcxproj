@@ -101,7 +101,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Action.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Cat.h" />
     <ClInclude Include="LFile.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Tool.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Action.cpp" />
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Cat.cpp" />
     <ClCompile Include="LFile.cpp" />

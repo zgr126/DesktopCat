@@ -13,4 +13,7 @@
 #pragma comment(lib, "windowscodecs.lib")
 //*********************************
 
+//мпелм╥нд╪Ч
+#include <shellapi.h>
+
 using namespace std;

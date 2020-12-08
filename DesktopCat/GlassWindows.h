@@ -2,20 +2,25 @@
 #include "DesktopCat.h"
 #include "Node.h"
 #include "Cat.h"
+#include "Sprite.h"
+#include "Timer.h"
 
 
 //********************文件信息*************************
-#ifndef FileDataParent
-#define FileDataParent		"File\\"			//数据文件父目录
-#endif
-#ifndef SpritePathParent
-#define SpritePathParent    "Image\\"           //纹理图片父目录
+#ifndef ParentPath
+#define ParentPath		"Assets\\"				//数据文件父目录
 #endif
 #ifndef MainFileDataName
 #define MainFileDataName	"Main.txt"			//储存程序运行时 精灵的名称 尺寸大小
 #endif
-#define ValidDataSpriteName 2                   //存放精灵名称位置
-#define ValidDataSpriteSize	3					//存放精灵尺寸位置
+#define GetFileData_SpriteNameData	2			//存放精灵名称行数
+#define GetFileData_SpriteSize		3			//存放精灵尺寸行数
+#ifndef DataMarker
+#define DataMarker					'#'			//标记符（用于标记数据与数据之间的间隔）
+#endif
+#ifndef DataMarkerEnd
+#define DataMarkerEnd				'@'			//终止符（用于标记数据结束）
+#endif
 //*****************************************************
 #define PI              3.1415926
 #define Angle_To_Radin(_Angle)  (PI/180*(_Angle))    //角度转弧度
@@ -39,27 +44,24 @@ private:
 	DWORD m_WindowExStyle;          //窗口扩展 风格       CreateWindowEx第一个参数
 	SIZE m_WindowSize;              //窗口大小
 	void* m_WndProc;                //窗口回调函数
-	POINT m_Position;               //窗口左上角坐标
 public:
 	bool init(HINSTANCE);
 
-	void SetClassName(LPCWSTR _Name) { m_WndEx.lpszClassName = _Name; }			//设置 窗口类 名称
-	void SetWindowName(LPCWSTR _Name) { wsprintf(m_WindowName, _Name); }		//设置 窗口 名称
-	void SetClassStyle(DWORD _Style) { m_ClassStyle = _Style; }					//设置 窗口类 风格
-	void SetWindowStyle(DWORD _Style) { m_WindowStyle = _Style; }				//设置 窗口 风格
-	void SetWindowExStyle(DWORD _Style) { m_WindowExStyle = _Style; }			//设置 窗口扩展 风格
-	void SetWindowSize(SIZE _size) { m_WindowSize = _size; }					//设置 窗口 大小
-	void SetWndProc(void* _proc) { m_WndProc = _proc; }							//设置 窗口回调函数
-	void SetPosition(POINT _pt);												//设置 窗口左上角坐标
-	void SethIcon(HICON _hicon) { m_WndEx.hIcon = _hicon; }
+	void SetClassName(LPCWSTR name) { m_WndEx.lpszClassName = name; }		//设置 窗口类 名称
+	void SetWindowName(LPCWSTR name) { wsprintf(m_WindowName, name); }		//设置 窗口 名称
+	void SetClassStyle(DWORD style) { m_ClassStyle = style; }				//设置 窗口类 风格
+	void SetWindowStyle(DWORD style) { m_WindowStyle = style; }				//设置 窗口 风格
+	void SetWindowExStyle(DWORD style) { m_WindowExStyle = style; }			//设置 窗口扩展 风格
+	void SetWindowSize(SIZE size) { m_WindowSize = size; }					//设置 窗口 大小
+	void SetWndProc(void* proc) { m_WndProc = proc; }						//设置 窗口回调函数
+	void SethIcon(HICON hicon) { m_WndEx.hIcon = hicon; }
 
 	SIZE GetWindowSize() { return m_WindowSize; }
-	POINT GetPosition() { return m_Position; }
 
 	HWND GetWindowHWND() { return m_Hwnd; }
 	WNDCLASSEX GetWindowWndClass() { return m_WndEx; }
 
-	void Show(int _nCmdShow);                                                       //注册 创建 并显示窗口
+	void Show(int _nCmdShow, POINT position);				//注册 创建 并显示窗口
 
 	//_ClassStyle为窗口类风格 _WindowStyle为创建窗口时的风格
 	static LWindowEx* create(HINSTANCE);
@@ -83,18 +85,17 @@ private:
 		Line,
 		Arc
 	};
-	public: enum TrunStyle			//窗口旋转样式
+	public:
+	enum TrunStyle			//窗口旋转样式
 	{
 		Clockwise = 1,				//顺时针旋转
 		Counterclockwise = -1		//逆时针旋转
 	};
 private:
 	//成员变量
-	//WNDCLASSEX m_WndEx;		//可能没用，暂时不清楚
 	WindowEx* m_Window;
-	NOTIFYICONDATA m_Tray;      //托盘结构体
+	NOTIFYICONDATA m_Tray;			//托盘结构体
 	bool m_isExit;
-	bool m_isStart;
 	HANDLE phWait;
 	LARGE_INTEGER liDueTime;
 	DWORD dwRet;
@@ -110,24 +111,23 @@ private:
 
 	WindowMoveStyle m_WindowMoveStyle;
 	bool m_isWindowMove;                //是否有运动
-	//LPoint m_WindowPosition;			//窗口位置
 	LPoint m_WindowFirst;				//窗口起点位置（只有在窗口运动的时候才有用）记录窗口在一段移动中一开始的位置
 	LPoint m_WindowDestination;		    //窗口终点位置（只有在窗口运动的时候才有用）
-	LPoint m_WindowSize;                //窗口尺寸
-	UINT m_MoveEntireTime;				//一次窗口运动规定的总时间
+	UINT m_MoveBothTime;				//一次窗口运动规定的总时间
 	UINT m_MoveAlreadyTimer;			//窗口已运动时间
-	//LPoint m_MoveStep;			        //窗口运动时 每帧运动的距离
 	double m_RotationAngle;				//选择Arc运动时 将旋转角度存入
 	LPoint m_CircleRaidus;				//选择Arc运动时 将运动半径存入
-	double m_CircleAngle;					//以窗口中心为原点，窗口中心与圆心的连线与x轴正方向夹角成CricleAngle度
+	double m_CircleAngle;				//以窗口中心为原点，窗口中心与圆心的连线与x轴正方向夹角成CricleAngle度
 	TrunStyle m_TrunStyle;
 	LPoint m_CircleCenter;				//选择Arc运动时 将运动圆心存入
 private:
-	void UpdateWindowMove();          //更新窗口运动
+	void UpdateWindowMove();			//更新窗口运动
 	//窗口直线运动的更新代码
 	void UdateWindowMoveLine();
 	//窗口圆弧运动的更新代码
 	void UpdateWindowMoveArc();
+	//键盘输入监听
+	void UpdateKeyInput();
 
 	void createWindow(HINSTANCE);
 	void createRefreshTimer();			//窗口绘制、逻辑处理的定时器
@@ -143,7 +143,7 @@ public:
 	GlassWindow();
 	~GlassWindow() { }
 
-	virtual void Draw();
+	virtual void Draw(ID2D1HwndRenderTarget*);
 	virtual void Update();
 
 	void initDirect2D(HWND);			//初始化Direct2D
@@ -158,15 +158,14 @@ public:
 	//窗口直线运动：将窗口在time毫秒内匀速移动destination（相对运动）
 	void WindowMoveBy(const LPoint& destination, DWORD time);
 	//窗口圆弧运动：将窗口在time毫秒内匀速绕半径Radius，圆心在以窗口中心为原点与圆心的连线和x轴正方向夹角成CricleAngle度，旋转Angle度数。旋转样式为style
-	void WindowMoveArc(LPoint Radius, double angle, double circleAngle, DWORD time, TrunStyle style);
+	void WindowMoveArc(LPoint Radius, double angle, double circleAngle, DWORD time, TrunStyle TrunStyle);
 #pragma endregion
 
 	//在窗口运动之前的一些初始化（分直线运动与圆弧运动）
-	void BeforeTheMoveOfWindowInit(const LPoint& destination, DWORD time, WindowMoveStyle style);
+	void BeforeTheMoveOfWindowInit(const LPoint& destination, DWORD time, WindowMoveStyle MoveStyle);
 	void BeforeTheMoveOfWindowInit(const LPoint& destination, const LPoint& center, const LPoint& radius, double Angle, double circleAngle, DWORD time);
 	//在窗口运动之后的一些初始化
 	void AfterTheMoveOfWindowInit();
-	void Start();
 	//停止窗口的移动（用于打断之类的操作）
 	void StopMove();
 
@@ -183,29 +182,25 @@ protected:
 	virtual void release();
 public:
 	//访问器
-	//LPoint GetWindowPosition() { return m_WindowPosition; }
 	LPoint GetWindowFirst() { return m_WindowFirst; }
 	LPoint GetWindowDestination() { return m_WindowDestination; }
-	LPoint GetWindowSize() { return m_WindowSize; }
+	SIZE GetWindowSize() { return m_Window->GetWindowSize(); }
 	//获取窗口中心位置
-	LPoint GetWindowCenter() { return m_Position - (m_WindowSize / 2); }
+	LPoint GetWindowCenter() { return { static_cast<float>(m_Window->GetWindowSize().cx / 2), static_cast<float>(m_Window->GetWindowSize().cy / 2) }; }
+	//获取窗口中心在屏幕上的位置
+	LPoint virtual GetPosition()
+	{
+		//获取窗口在屏幕上的位置
+		LPoint Position = m_Position;
+		m_Position.m_x -= m_Anchor.m_x * m_Window->GetWindowSize().cx;
+		m_Position.m_y -= m_Anchor.m_y * m_Window->GetWindowSize().cy;
+		return Position;
+	}
 
 	void SetisWindowMove(const bool is) { m_isWindowMove = is; }
 	void SetWindowMoveStyle(const WindowMoveStyle style) { m_WindowMoveStyle = style; }
-	//void SetWindowPosition(const LPoint& point) { m_WindowPosition = point; }
 	void SetWindowFirst(const LPoint& first) { m_WindowFirst = first; }
 	void SetWindowDestination(const LPoint& destination) { m_WindowDestination = destination; }
-	void SetWindowSize(const LPoint& size) { m_WindowSize = size; }
+	void SetWindowSize(const LPoint& size) { m_Window->SetWindowSize( { static_cast<LONG>(size.m_x), static_cast<LONG>(size.m_y)} ); }
 
 } GWindow;
-
-
-
-
-template<typename T>
-void ReleaseD2D1Data(T _Data)
-{
-	if (_Data != nullptr)
-		_Data->Release();
-}
-std::wstring string2wstring(const std::string& str);	//string转wstring

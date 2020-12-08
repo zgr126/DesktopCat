@@ -25,8 +25,8 @@ LLoadImage::LLoadImage()
 
 }
 
-HRESULT LLoadImage::LoadintImage(LPCTSTR _fileName, ID2D1RenderTarget* _pRT, IWICImagingFactory* _pimageFactory,
-	ID2D1Bitmap** _pBitmap)
+HRESULT LLoadImage::LoadintImage(LPCTSTR fileName, ID2D1RenderTarget* pRT, IWICImagingFactory* pimageFactory,
+	ID2D1Bitmap** pBitmap)
 {
 	//IWICStream* pStream = NULL;
 	//IWICBitmapScaler* pScaler = NULL;
@@ -34,8 +34,8 @@ HRESULT LLoadImage::LoadintImage(LPCTSTR _fileName, ID2D1RenderTarget* _pRT, IWI
 	IWICBitmapFrameDecode* pSource = NULL;
 	IWICFormatConverter* pConverter = NULL;
 
-	HRESULT hr = _pimageFactory->CreateDecoderFromFilename(
-		_fileName,
+	HRESULT hr = pimageFactory->CreateDecoderFromFilename(
+		fileName,
 		NULL,
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad,
@@ -46,7 +46,7 @@ HRESULT LLoadImage::LoadintImage(LPCTSTR _fileName, ID2D1RenderTarget* _pRT, IWI
 	pDecoder->GetFrame(0, &pSource);
 
 
-	hr = _pimageFactory->CreateFormatConverter(&pConverter);
+	hr = pimageFactory->CreateFormatConverter(&pConverter);
 	if (!SUCCEEDED(hr))
 		OutputDebugString(L"CreateFormatConverter ß∞‹\n");
 
@@ -60,10 +60,10 @@ HRESULT LLoadImage::LoadintImage(LPCTSTR _fileName, ID2D1RenderTarget* _pRT, IWI
 	if (!SUCCEEDED(hr))
 		OutputDebugString(L"Initalize ß∞‹\n");
 
-	hr = _pRT->CreateBitmapFromWicBitmap(
+	hr = pRT->CreateBitmapFromWicBitmap(
 		pConverter,
 		NULL,
-		_pBitmap);
+		pBitmap);
 
 	if (!SUCCEEDED(hr))
 		OutputDebugString(L"CreateBitmapFromWicBitmap ß∞‹\n");

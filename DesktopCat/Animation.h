@@ -1,17 +1,33 @@
 #pragma once
 #include "DesktopCat.h"
-#include "Node.h"
+#include "Sprite.h"
+#include "Timer.h"
+#include "LFile.h"
+#include "Tool.h"
+
+using namespace Lin;
 class LSprite;
 
-#define DataParent		"File\\"				//数据文件的父目录
-#define ActionData		"\\ActionData.txt"		//从此文件中读取精灵尺寸以及总共有多少组动作	(用户提供)
+#ifndef ParentPath
+#define ParentPath				"Assets\\"					//数据文件的父目录
+#endif
+#ifndef AnimationDataPath
+#define AnimationDataPath		"\\AnimationData.txt"		//从此文件中读取精灵尺寸以及总共有多少组动作	(用户提供)
+#endif
+#ifndef DataMarker
+#define DataMarker					'#'			//标记符（用于标记数据与数据之间的间隔）
+#endif
+#ifndef DataMarkerEnd
+#define DataMarkerEnd				'@'			//终止符（用于标记数据结束）
+#endif
 //行格式
-#define VaildData			2					//有效数据开始行数（动作组总数：即整张图片有多少组动作）
-
+#define GetFileData_BeginLine		2			//有效数据开始行数（动作组总数：即整张图片有多少组动作）
 //有效数据参数格式
-#define VaildData_AnimationPlayLine		0		//第1个位置的参数存放：该动画选自图片的第n行
-#define VaildData_AnimationOrder		1		//第2个位置的参数存放：该动画一个周期内帧的切换顺序 如：(0,1,2,3)
-#define VaildData_AnimationDwellTime	2		//第3个位置的参数存放：第1帧的停留时间...以此类推
+#define GetFileData_CountLine		0			//第0个位置参数存放：该动画选自图片的第n行
+#define GetFileData_PlayOrder		1			//第1个位置参数存放：该动画一个周期内帧的切换顺序 如：(0,1,2,3)
+#define GetFileData_StayTime		2			//第2个位置参数存放：第1帧的停留时间...以此类推
+#define GetFileData_Style			3			//第3个位置参数存放：该动画风格，1为周期主导，2为时间主导，3为无限循环播放
+#define GetFileData_AddValue		4			//第4个位置参数存放：附加参数，当Style为1，2时需要指定附加参数，为3时请设为0
 
 #define M_To_MS		1000.0						//秒转毫秒
 
@@ -19,62 +35,82 @@ class LSprite;
 class LAnimation
 {
 public:
-	enum class LAnimationStyle
-	{
-		Null,		//用户不可用 只能由系统使用			(当动画刚创建与结束时 赋予的类型)
-		Cycle,		//周期主导 比如一个动画只循环1次		(播放次数一到 不管动画播放到哪帧 直接删除 比如：攻击)
-		Time,		//时间主导 比如一个动画固定播放1000ms	(时间未到 动画就无限循环播放 比如：跑步)
-		UnTime		//无限循环播放						(永不停止 比如：静止站立)
-	};
-	LAnimationStyle m_AnimationStyle;			//记录动画类型
 	//静态变量、方法
 	static LAnimation* create(LSprite*);
 	static void release(LAnimation**);
+	//动画类型枚举
+	enum class LAnimationStyle
+	{
+		None,		//用户不可用 只能由系统使用			(当动画刚创建与结束时 赋予的类型)
+		Cycle,		//周期主导 比如一个动画只循环1次		(播放次数一到 不管动画播放到哪帧 直接删除 比如：攻击)
+		Time,		//时间主导 比如一个动画固定播放1000ms	(时间未到 动画就无限循环播放 比如：跑步)
+		UnTime		//无限循环播放						(永不停止 直到动画被打断 比如：静止站立)
+	};
 private:
 	/********************************************/
-	//这是管理动画需要的变量
-	string m_AnimationDataFile;	//动画数据文件的路径
+	//动画数据文件的路径
+	string m_AnimationDataFilePath;
+
 	//这是1个动画播放需要的变量
-	UINT m_PlayLine;			//该动画选自图片的第m_PlayLine行	(从文件获取)
-	vector<float> m_FrameOrder;	//一个动画周期的帧切换顺序			(从文件获取)
-	vector<float> m_DwellTime;	//帧与帧之间的间隔时间			(从文件获取)
-	UINT m_FrameNumber;			//动画1个周期的总帧数	
-	UINT m_NowFrame;			//当前帧
-	DWORD m_BeginPlayTime;		//帧开始时间
-	DWORD m_NowFrameTime;		//帧现在时间
-	DWORD m_EndFrameTime;		//帧结束时间
-	DWORD m_PlayTime;			//动画持续时间
-	int m_PlayNumber;			//播放次数
-	bool m_isEnd;				//动画播放是否结束
+	//该动画选自图片的第m_CountLine行		(从文件获取)
+	LFileData<UINT> m_CountLine;
+	//一个动画周期的帧切换顺序				(从文件获取)
+	vector<LFileData<UINT>> m_vPlayOrder;
+	//每帧的停留时间	单位ms				(从文件获取)
+	vector<LFileData<UINT>> m_vStayTime;
+	//动画类型							(从文件获取)
+	LFileData<LAnimationStyle>	m_AnimationStyle;
+	//附加数据							(从文件获取)
+	LFileData<UINT> m_AddValue;		//当Style为周期主导时，AddValue代表循环次数。为时间主导时，AddValue为动画持续总时间。为无限循环时，AddValue为0
+	//播放当前帧的索引	vector的索引
+	UINT m_FrameIndex;
+	//每帧停留时间的索引	vector的索引
+	UINT m_FrameStayTimeIndex;
+	//储存每帧停留时间
+	UINT m_FrameStyleTime;
+	//当前帧停留时间
+	UINT m_NowFrameStayTime;
+	//当前动画持续时间	(从动画创建完成到现在所经历的时间)
+	UINT m_NowAnimationContinue;
+	//动画播放是否结束
+	bool m_isEnd;
 	/*******************************************/
 private:
+	//只能通过create方法创建LAnimation对象
+	LAnimation();
 	bool init(LSprite*);
 	void release();
 
-	void updateFrame();				//更新帧的状态
-	void updataFrameTime();			//当切换下一帧时 更新帧计时
-	void AnimationBegin();			//动画播放开始时调用
-	void AnimationEnd();			//动画播放结束时调用
-	void Clear();					//归零动画数据 然后被新动作数据覆盖
+	//数据审查，将一些数据不全的vector补齐
+	void Censor();
 
-	//读取vector中第_Position位置的参数存放到_Param中
-	template <typename T>
-	void ReadVectorData(vector<float>&, int _Index, T& _Param);
+	//在动画播放开始之前的一些初始化
+	void BeforeTheAnimationOfSpriteInit();
+	//在动画播放结束后的一些初始化
+	void AfterTheAnimationOfSpriteInit();
+
+	//返回绘制区域(绘制区域是指整个纹理图的某一个精灵位置)	参数LTimer*表示Animation本身没有定时器，是从Sprite身上借来的
+	LPoint Update(LTimer* animationTimer);
+	//针对周期主导的动画更新
+	bool isCycle();
+	//针对时间主导的动画更新
+	bool isTime(ULONGLONG interval);
+	//针对无限时间主导的动画更新
+	void isUnTime();
+	//切换下一帧
+	void NextFrame();
+	//切换下一个周期
+	void NextCycle();
 
 public:
-	//公开方法
-	LAnimation();
+	//播放文件中第countLine行动画
+	bool PlayAnimation(UINT fileLine);
 
-	LPoint update();	//返回现在播放第几帧
-
-	//切换动画 不会删除	 会覆盖上个动作的数据	
-	void Cutover(int _FileLine, LAnimationStyle _Style, DWORD _Val); //详细注释见LPet::PlayAnimation方法
-
-public:
 	//访问器
-	UINT GetFrameNumber() { return m_FrameNumber; }
-	UINT GetNowFrame() { return m_NowFrame; }
 	bool GetisEnd() { return m_isEnd; }
+	LAnimationStyle GetAnimationStyle() { return m_AnimationStyle.m_Val; }
+
+	friend class LSprite;
 };
 
 typedef LAnimation Animation;
