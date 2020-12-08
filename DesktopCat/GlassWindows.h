@@ -28,7 +28,7 @@
 #define WM_MESSAGE	WM_USER + 1	//自定义托盘消息
 #define ID_TRAY	1				//托盘ID
 
-#define Window_Move_Timer		0	//窗口移动定时器的固定ID
+#define Window_Move_Timer_ID		0	//窗口移动定时器的固定ID
 
 class LWindowEx
 {
@@ -187,15 +187,16 @@ public:
 	SIZE GetWindowSize() { return m_Window->GetWindowSize(); }
 	//获取窗口中心位置
 	LPoint GetWindowCenter() { return { static_cast<float>(m_Window->GetWindowSize().cx / 2), static_cast<float>(m_Window->GetWindowSize().cy / 2) }; }
-	//获取窗口中心在屏幕上的位置
-	LPoint virtual GetPosition()
+	//获取窗口左上角在屏幕上的位置
+	LPoint GetWindowPosition()
 	{
 		//获取窗口在屏幕上的位置
 		LPoint Position = m_Position;
-		m_Position.m_x -= m_Anchor.m_x * m_Window->GetWindowSize().cx;
-		m_Position.m_y -= m_Anchor.m_y * m_Window->GetWindowSize().cy;
+		Position.m_x = static_cast<int>(Position.m_x - m_Anchor.m_x * m_Window->GetWindowSize().cx + 0.5);	//+0.5四舍五入
+		Position.m_y = static_cast<int>(Position.m_y - m_Anchor.m_y * m_Window->GetWindowSize().cy + 0.5);
 		return Position;
 	}
+	//LPoint GetPosition() { return -10000; }	//在GlassWindow中不允许使用此方法
 
 	void SetisWindowMove(const bool is) { m_isWindowMove = is; }
 	void SetWindowMoveStyle(const WindowMoveStyle style) { m_WindowMoveStyle = style; }

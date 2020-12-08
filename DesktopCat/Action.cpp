@@ -15,6 +15,8 @@ void LAction::release(LAction** pAction)
 {
 	if (!(*pAction))
 		return;
+	//释放前停止窗口运动
+	(*pAction)->m_Sprite->GetGlassWindow()->StopMove();
 	(*pAction)->release();
 	delete* pAction;
 	*pAction = nullptr;

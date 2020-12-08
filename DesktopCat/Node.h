@@ -40,7 +40,7 @@ public:
 public:
 	//·ÃÎÊÆ÷
 	LNode* GetNode() { return this; }
-	LPoint virtual GetPosition() { return m_Position; }
+	LPoint GetPosition() { return m_Position; }
 	LPoint GetAnchor() { return m_Anchor; }
 
 	void SetPosition(const LPoint& point) { m_Position = point; }

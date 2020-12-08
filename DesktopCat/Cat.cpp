@@ -21,6 +21,16 @@ void Cat::release(Cat** pCat)
 #pragma region 重写基类方法
 bool Cat::init(const string& spriteName, const string& suffix, const LPoint& size)
 {
+	//初始为走路状态（从屏幕外走进来）
+	m_Status = CatStatus::Walk;
+	m_AnimationTimerID = Cat_AnimationTimer_ID;
+	//初始化随机种子
+	srand(time(0));
+	//随机一次发呆时间
+	m_EntireIdelTime = rand() % (Cat_IdelEntireTime_Max - Cat_IdelEntireTime_Min) + Cat_IdelEntireTime_Min;
+	//猫发呆多久后进行运动的定时器
+	m_IdelTimer = LTimerManager::instance->createTimer(Cat_IdelTimer_ID);
+	if (m_IdelTimer == nullptr)	return false;
 	return LSprite::init(spriteName, suffix, size);
 }
 
@@ -37,6 +47,8 @@ void Cat::Draw(ID2D1HwndRenderTarget* pRT)
 void Cat::Update()
 {
 	LSprite::Update();
+
+	m_NowIdelTime += m_IdelTimer->GetInterval();
 }
 #pragma endregion
 

@@ -58,9 +58,10 @@ public:
 	virtual void Update();
 
 	HRESULT LoadingImage(LPCTSTR, ID2D1RenderTarget*, IWICImagingFactory*);
-	//创建一个新的Animation添加进队列
-	void AddAnimation(UINT fileLine);
-
+	//创建一个新的Animation添加进队列的最前面（可以打断动作）
+	void AddFrontAnimation(UINT fileLine);
+	//创建一个新的Animation添加进队列的最后面
+	void AddBackAnimation(UINT fileLine);
 public:
 	//访问器
 	string GetName() { return m_Name; }

@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <assert.h>
+#include <time.h>
 
 //********D2D相关头文件及lib********
 #include <wincodec.h>

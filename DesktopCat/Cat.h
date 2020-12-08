@@ -1,8 +1,52 @@
 #pragma once
 #include "DesktopCat.h"
 #include "Sprite.h"
+#include "Animation.h"
 
 #define Cat_AnimationTimer_ID	10		//猫动画定时器独有ID
+#define Cat_IdelTimer_ID		11		//猫发呆定时器
+
+//此宏对应Animation文件行数
+#pragma region 猫朝向宏定义
+//站立
+#define Cat_Front_Idle			(FileData_Animation_BeginLine + 1)		//面朝屏幕		站立
+#define Cat_Back_Idle			(FileData_Animation_BeginLine + 2) 		//背对屏幕		站立
+#define Cat_Left_Idle			(FileData_Animation_BeginLine + 3)		//向左			站立
+#define Cat_Right_Idle			(FileData_Animation_BeginLine + 4)		//向右			站立
+#define Cat_FrontLeft_Idle		(FileData_Animation_BeginLine + 5)		//面向屏幕朝左	站立
+#define Cat_BackLeft_Idle		(FileData_Animation_BeginLine + 6)		//背对屏幕朝左	站立
+#define Cat_FrontRight_Idle		(FileData_Animation_BeginLine + 7)		//面向屏幕朝右	站立
+#define Cat_BackRight_Idle		(FileData_Animation_BeginLine + 8)		//背对屏幕朝右	站立
+#define Cat_Idle_Min		Cat_Front_Idle
+#define Cat_Idle_Max		Cat_BackRight_Idle	//Idle范围
+//走路
+#define Cat_Front_Walk			(Cat_Idle_Max + 1)						//面朝屏幕		走路
+#define Cat_Back_Walk			(Cat_Idle_Max + 2)				 		//背对屏幕		走路
+#define Cat_Left_Walk			(Cat_Idle_Max + 3)						//向左			走路
+#define Cat_Right_Walk			(Cat_Idle_Max + 4)						//向右			走路
+#define Cat_FrontLeft_Walk		(Cat_Idle_Max + 5)						//面向屏幕朝左	走路
+#define Cat_BackLeft_Walk		(Cat_Idle_Max + 6)						//背对屏幕朝左	走路
+#define Cat_FrontRight_Walk		(Cat_Idle_Max + 7)						//面向屏幕朝右	走路
+#define Cat_BackRight_Walk		(Cat_Idle_Max + 8)						//背对屏幕朝右	走路
+#define Cat_Walk_Min		Cat_Front_Walk
+#define Cat_Walk_Max		Cat_BackRight_Walk	//Walk范围
+//跑步
+#define Cat_Front_Run			(Cat_Walk_Max + 1)						//面朝屏幕		跑步
+#define Cat_Back_Run			(Cat_Walk_Max + 2)				 		//背对屏幕		跑步
+#define Cat_Left_Run			(Cat_Walk_Max + 3)						//向左			跑步
+#define Cat_Right_Run			(Cat_Walk_Max + 4)						//向右			跑步
+#define Cat_FrontLeft_Run		(Cat_Walk_Max + 5)						//面向屏幕朝左	跑步
+#define Cat_BackLeft_Run		(Cat_Walk_Max + 6)						//背对屏幕朝左	跑步
+#define Cat_FrontRight_Run		(Cat_Walk_Max + 7)						//面向屏幕朝右	跑步
+#define Cat_BackRight_Run		(Cat_Walk_Max + 8)						//背对屏幕朝右	跑步
+#define Cat_Run_Min			Cat_Front_Run
+#define Cat_Run_Max			Cat_BackRight_Run	//Run范围
+#pragma endregion
+
+//猫发呆一次时间的范围
+#define Cat_IdelEntireTime_Min	1000
+#define Cat_IdelEntireTime_Max	5000
+
 
 class Cat :public LSprite
 {
@@ -18,8 +62,23 @@ public:
 	virtual void Update();
 #pragma endregion
 
+	//猫状态枚举
+	enum class CatStatus
+	{
+		Idel,		//站立
+		Walk,		//走路
+		Run,		//跑步
+		Other		//其他
+	};
 private:
-
+	//猫状态
+	CatStatus m_Status;
+	//猫发呆定时器
+	LTimer* m_IdelTimer;
+	//猫发呆一次的时间(随机1-5秒)
+	UINT m_EntireIdelTime;
+	//猫从发呆开始到现在的时间
+	UINT m_NowIdelTime;
 public:
 
 };

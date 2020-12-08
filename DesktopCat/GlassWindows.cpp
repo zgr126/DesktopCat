@@ -109,7 +109,7 @@ LRESULT CALLBACK GlassWindow::WndProc(HWND _hwnd, UINT _message, WPARAM _wParam,
 
 void GlassWindow::release()
 {
-	LTimerManager::instance->releaseTimer(Window_Move_Timer);		//释放窗口定时器
+	LTimerManager::instance->releaseTimer(Window_Move_Timer_ID);		//释放窗口定时器
 	Cat::release(&m_Cat);
 }
 
@@ -171,10 +171,9 @@ void GlassWindow::initPet()
 	//创建精灵
 	m_Cat = Cat::create(SpriteName, SpriteSuffix, Size.m_Val);
 	m_Cat->SetGlassWindow(this);
-	m_Cat->SetAnimationTimerID(Cat_AnimationTimer_ID);
 	m_Cat->SetAnchor({ 0 });
-	m_Cat->AddAnimation(3);
-	m_Cat->AddAnimation(20);
+	m_Cat->AddFrontAnimation(3);
+	m_Cat->AddFrontAnimation(20);
 	//m_Cat->AddAnimation(4);
 }
 
@@ -225,7 +224,7 @@ void GlassWindow::MoveWindowPosition(const LPoint& destination)
 void GlassWindow::runrelay(int _CmdShow)
 {
 	m_Window->Show(_CmdShow, { 0,0 });
-	LPoint Position(400,300);
+	LPoint Position(0,0);
 	SIZE size = m_Window->GetWindowSize();
 	MoveWindowPosition(Position);
 	SetWindowSize({ static_cast<float>(size.cx), static_cast<float>(size.cy) });
@@ -346,19 +345,44 @@ void GlassWindow::UpdateKeyInput()
 	if (ControlKey && !KEY_DOWM(VK_CONTROL))
 	{
 		//弹起Control键
-		OutputDebugString(L"弹起Control键\n");
+		//OutputDebugString(L"弹起Control键\n");
+		OutputDebugString(L"窗口大小：");
+		OutputDebugString(to_wstring(m_Window->GetWindowSize().cx).c_str());
+		OutputDebugString(L",");
+		OutputDebugString(to_wstring(m_Window->GetWindowSize().cy).c_str());
+		OutputDebugString(L"\n");
+		OutputDebugString(L"窗口左上角位置：");
+		OutputDebugString(to_wstring(GetWindowPosition().m_x).c_str());
+		OutputDebugString(L",");
+		OutputDebugString(to_wstring(GetWindowPosition().m_y).c_str());
+		OutputDebugString(L"\n");
+		OutputDebugString(L"中心在屏幕上的位置：");
+		OutputDebugString(to_wstring(GetPosition().m_x).c_str());
+		OutputDebugString(L",");
+		OutputDebugString(to_wstring(GetPosition().m_y).c_str());
+		OutputDebugString(L"\n");
+		OutputDebugString(L"窗口中心位置：");
+		OutputDebugString(to_wstring(GetWindowCenter().m_x).c_str());
+		OutputDebugString(L",");
+		OutputDebugString(to_wstring(GetWindowCenter().m_y).c_str());
+		OutputDebugString(L"\n");
 	}
 	ControlKey = KEY_DOWM(VK_CONTROL);
 }
 
 void GlassWindow::WindowMoveTo(const LPoint& destination, DWORD time)
 {
+	LPoint Destination(static_cast<int>(destination.m_x), static_cast<int>(destination.m_y));
+	OutputDebugString(to_wstring(destination.m_x).c_str());
+	OutputDebugString(L",");
+	OutputDebugString(to_wstring(destination.m_y).c_str());
+	OutputDebugString(L"\n");
 	BeforeTheMoveOfWindowInit(destination, time, WindowMoveStyle::Line);
 }
 
 void GlassWindow::WindowMoveBy(const LPoint& destination, DWORD time)
 {
-	WindowMoveTo(m_Position + destination, time);
+	WindowMoveTo(destination, time);
 }
 
 void GlassWindow::WindowMoveArc(LPoint radius, double angle, double circleAngle, DWORD time, TrunStyle trunStyle)
@@ -371,8 +395,8 @@ void GlassWindow::WindowMoveArc(LPoint radius, double angle, double circleAngle,
 	//将circleAngle换成小于360°的角
 	circleAngle = AngleConversion360(circleAngle);
 	//计算圆心位置
-	CircleCenter.m_x = WindowCenter.m_x + radius.m_x * cos(Angle_To_Radin(circleAngle));
-	CircleCenter.m_y = WindowCenter.m_y + (radius.m_y * sin(Angle_To_Radin(circleAngle)) * -1);		//这里*-1是因为屏幕y轴是向下增长的
+	CircleCenter.m_x = static_cast<int>(WindowCenter.m_x + radius.m_x * cos(Angle_To_Radin(circleAngle)) + 0.5);	//加static_casst是去掉浮点数 +0.5是四舍五入
+	CircleCenter.m_y = static_cast<int>(WindowCenter.m_y + (radius.m_y * sin(Angle_To_Radin(circleAngle)) * -1) + 0.5);		//这里*-1是因为屏幕y轴是向下增长的
 	//窗口目的地
 	LPoint destination;
 	double Angle = angle;
@@ -399,8 +423,8 @@ LPoint GlassWindow::CalculationArc(const LPoint& A, const LPoint& C, double angl
 	//目的地
 	LPoint Destination;
 	//计算目的地	传进来的angle一定小于360°，请放心。
-	Destination.m_x = C.m_x + radius.m_x * cos(Angle_To_Radin(CircleAngleCA + (trunStyle * angle)));
-	Destination.m_y = C.m_y + (radius.m_y * sin(Angle_To_Radin(CircleAngleCA + (trunStyle * angle)) * -1));		//这里*-1是因为屏幕y轴是向下增长的
+	Destination.m_x = static_cast<int>(C.m_x + radius.m_x * cos(Angle_To_Radin(CircleAngleCA + (trunStyle * angle))) + 0.5);	//加static_casst是去掉浮点数 +0.5是四舍五入
+	Destination.m_y = static_cast<int>(C.m_y + (radius.m_y * sin(Angle_To_Radin(CircleAngleCA + (trunStyle * angle)) * -1)) + 0.5);	//这里*-1是因为屏幕y轴是向下增长的
 	return Destination;
 }
 
@@ -420,7 +444,7 @@ void GlassWindow::BeforeTheMoveOfWindowInit(const LPoint& destination, DWORD tim
 	SetWindowMoveStyle(MoveStyle);
 	//为窗口运动创建一个计时器		移动结束后释放
 	if(m_WindowMoveTimer == nullptr)
-		m_WindowMoveTimer = LTimerManager::instance->createTimer(Window_Move_Timer);
+		m_WindowMoveTimer = LTimerManager::instance->createTimer(Window_Move_Timer_ID);
 }
 void GlassWindow::BeforeTheMoveOfWindowInit(const LPoint& destination, const LPoint& circleCenter, const LPoint& radius, double angle, double circleAngle, DWORD time)
 {
@@ -450,7 +474,7 @@ void GlassWindow::AfterTheMoveOfWindowInit()
 	m_CircleAngle = 0;		//初始化旋转圆心角度
 	SetWindowMoveStyle(WindowMoveStyle::None);
 	//释放窗口运动计时器
-	LTimerManager::instance->releaseTimer(Window_Move_Timer);
+	LTimerManager::instance->releaseTimer(Window_Move_Timer_ID);
 	m_WindowMoveTimer = nullptr;
 }
 
