@@ -21,9 +21,15 @@ void Cat::release(Cat** pCat)
 #pragma region 重写基类方法
 bool Cat::init(const string& spriteName, const string& suffix, const LPoint& size)
 {
+	if (!LSprite::init(spriteName, suffix, size))
+		return false;
+	//设置精灵朝向
+	m_Direction = CatDirection::Front;
 	//初始为走路状态（从屏幕外走进来）
-	m_Status = CatStatus::Walk;
+	m_Status = CatStatus::Motion;
+	m_MotionStatus = CatMotionStatus::Walk;
 	m_AnimationTimerID = Cat_AnimationTimer_ID;
+	m_NowContinueTime = 0;
 	//初始化随机种子
 	srand(time(0));
 	//随机一次发呆时间
@@ -31,7 +37,8 @@ bool Cat::init(const string& spriteName, const string& suffix, const LPoint& siz
 	//猫发呆多久后进行运动的定时器
 	m_IdelTimer = LTimerManager::instance->createTimer(Cat_IdelTimer_ID);
 	if (m_IdelTimer == nullptr)	return false;
-	return LSprite::init(spriteName, suffix, size);
+
+	return true;
 }
 
 void Cat::release()
@@ -48,12 +55,145 @@ void Cat::Update()
 {
 	LSprite::Update();
 
-	m_NowIdelTime += m_IdelTimer->GetInterval();
+	m_NowContinueTime += m_IdelTimer->GetInterval();
+	if (m_Status == CatStatus::Idel)
+	{
+		//发呆到达时间
+		if (m_NowContinueTime >= m_EntireIdelTime)
+		{
+			RangeMotion();
+		}
+		else
+		{
+			//取精灵方向
+			LPoint Area = { 0, static_cast<float>(GetAnimationDataDirection() - FileData_Animation_BeginLine) };
+			SetDrawArea(Area);
+		}
+	}
+	else if (m_Status == CatStatus::Motion)
+	{
+		//如果达到运动时间，更改参数
+		if (m_NowContinueTime >= m_MotionTime)
+		{
+			BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
+		}
+	}
+	else if (m_Status == CatStatus::Other)
+	{
+
+	}
 }
 #pragma endregion
 
 
+void Cat::MotionTo(const LPoint& destination, double speed, int actionDataLine)
+{
+	//计算与终点的距离，x轴，y轴方向
+	LPoint D = destination - m_GlassWndow->GetPosition();
+	//计算运动时间
+	m_MotionTime = Division(sqrt(pow(D.m_x, 2) + pow(D.m_y, 2)) * M_To_MS, speed);
+	//计算猫的方向
+	SetDirection(D);
+	//在队列前插入
+	AddFrontAnimation(GetAnimationDataDirection() + actionDataLine, static_cast<int>(LAnimation::LAnimationStyle::Time), m_MotionTime);		//这里参数为Animation.txt行走动画的行数
+	//添加Action
+	vector<float> value2 = { static_cast<float>(m_MotionTime) };
+	LAction* pAction = LAction::create(this, static_cast<int>(LAction::ActionStyle::ToLine), destination, value2);
+}
 
+void Cat::BeforeTheChangeStatusOfCatInit(CatStatus status, CatMotionStatus motionStatus)
+{
+	m_Status = status;
+	m_MotionStatus = motionStatus;
+	m_NowContinueTime = 0;
+	m_IdelTimer->Reset();
+}
+
+void Cat::WalkTo(const LPoint& destination)
+{
+	BeforeTheChangeStatusOfCatInit(CatStatus::Motion, CatMotionStatus::Walk);
+	MotionTo(destination, Cat_Walk_Speed, Cat_Idel_To_Walk);
+}
+void Cat::WalkBy(const LPoint& destination)
+{
+	WalkTo(m_GlassWndow->GetPosition() + destination);
+}
+void Cat::RunTo(const LPoint& destination)
+{
+	BeforeTheChangeStatusOfCatInit(CatStatus::Motion, CatMotionStatus::Run);
+	MotionTo(destination, Cat_Run_Speed, Cat_Idel_To_Run);
+}
+void Cat::RunBy(const LPoint& destination)
+{
+	RunTo(m_GlassWndow->GetPosition() + destination);
+}
+
+void Cat::RangeMotion()
+{
+	HWND Desktop = GetDesktopWindow();
+	RECT DesktopRc;
+	GetWindowRect(Desktop, &DesktopRc);
+	//随机范围
+	int RangeX = (DesktopRc.right - 2 * Cat_Range_X) + Cat_Range_X;
+	int RangeY = (DesktopRc.bottom - 2 * Cat_Range_Y) + Cat_Range_Y;
+	LPoint Destination = { static_cast<float>(rand() % RangeX), static_cast<float>(rand() % RangeY) };
+	WalkTo(Destination);
+}
+
+
+void Cat::SetDirection(const LPoint& vec)
+{
+	double r = sqrt(pow(vec.m_x, 2) + pow(vec.m_y, 2));
+	double Sin = vec.m_y / r;
+	double Cos = vec.m_x / r;
+	if (Sin > Sin337_5 && Sin <= Sin22_5 && Cos > Cos337_5)
+	{
+		m_Direction = CatDirection::Right;
+	}
+	else if (Sin > Sin22_5 && Sin <= Sin67_5 && Cos >= Cos67_5 && Cos < Cos22_5)
+	{
+		m_Direction = CatDirection::FrontRight;
+	}
+	else if (Sin > Sin112_5 && Cos >= Cos112_5 && Cos < Cos67_5)
+	{
+		m_Direction = CatDirection::Front;
+	}
+	else if (Sin <= Sin112_5 && Sin > Sin157_5 && Cos <= Cos112_5 && Cos > Cos157_5)
+	{
+		m_Direction = CatDirection::FrontLeft;
+	}
+	else if (Sin <= Sin157_5 && Sin > Sin202_5 && Cos <= Cos202_5)
+	{
+		m_Direction = CatDirection::Left;
+	}
+	else if (Sin <= Sin202_5 && Sin > Sin247_5 && Cos >= Cos202_5 && Cos < Cos247_5)
+	{
+		m_Direction = CatDirection::BackLeft;
+	}
+	else if (Sin < Sin292_5 && Cos >= Cos247_5 && Cos < Cos292_5)
+	{
+		m_Direction = CatDirection::Back;
+	}
+	else
+	{
+		m_Direction = CatDirection::BackRight;
+	}
+}
+
+UINT Cat::GetAnimationDataDirection()
+{
+	switch (m_Direction)
+	{
+		case CatDirection::Front:	return	Cat_Front_Idle;
+		case CatDirection::Back:	return	Cat_Back_Idle;
+		case CatDirection::Left:	return	Cat_Left_Idle;
+		case CatDirection::Right:	return	Cat_Right_Idle;
+		case CatDirection::FrontLeft:	return	Cat_FrontLeft_Idle;
+		case CatDirection::FrontRight:	return	Cat_FrontRight_Idle;
+		case CatDirection::BackLeft:	return	Cat_BackLeft_Idle;
+		case CatDirection::BackRight:	return	Cat_BackRight_Idle;
+	}
+}
 
 
 //

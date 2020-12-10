@@ -23,8 +23,8 @@ class LAction
 {
 public:
 	static LAction* create(LSprite* pSprite, const UINT& countLine);
+	static LAction* create(LSprite* pSprite, const int actionStyle, const LPoint& value1, vector<float>& value2);
 	static void release(LAction**);
-private:
 	//运动轨迹样式
 	enum class ActionStyle
 	{
@@ -35,6 +35,7 @@ private:
 		Arc,		//曲线运动
 		Max			//范围最大值
 	};
+private:
 	//运动样式
 	LFileData<ActionStyle> m_ActionStyle;
 	//绝对位置，相对位置，旋转半径。这是一个数据包
@@ -48,6 +49,7 @@ private:
 	~LAction() { }
 
 	bool init(LSprite* pSprite, const UINT& countLine);
+	bool init(LSprite* pSprite, const int actionStyle, const LPoint& value1, vector<float>& value2);
 	void release();
 
 	//数据审查

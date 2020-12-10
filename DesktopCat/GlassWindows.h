@@ -28,6 +28,11 @@
 #define WM_MESSAGE	WM_USER + 1	//自定义托盘消息
 #define ID_TRAY	1				//托盘ID
 
+//托盘菜单ID
+#define Tray_Menu_Exit_ID		301		//退出
+#define ID_ALL_TRAYMENU(ID)\
+	ID==Tray_Menu_Exit_ID?1:0
+
 #define Window_Move_Timer_ID		0	//窗口移动定时器的固定ID
 
 class LWindowEx
@@ -196,6 +201,7 @@ public:
 		Position.m_y = static_cast<int>(Position.m_y - m_Anchor.m_y * m_Window->GetWindowSize().cy + 0.5);
 		return Position;
 	}
+	NOTIFYICONDATA GetTray() { return m_Tray; }
 	//LPoint GetPosition() { return -10000; }	//在GlassWindow中不允许使用此方法
 
 	void SetisWindowMove(const bool is) { m_isWindowMove = is; }
@@ -204,4 +210,19 @@ public:
 	void SetWindowDestination(const LPoint& destination) { m_WindowDestination = destination; }
 	void SetWindowSize(const LPoint& size) { m_Window->SetWindowSize( { static_cast<LONG>(size.m_x), static_cast<LONG>(size.m_y)} ); }
 
+
+public:
+	//以下为托盘消息
+	static void TrayHandleMsg(LPARAM);
+	static void TrayHandleMenuMsg(WPARAM);
+
+	//为托盘事件
+	static void OnTrayLButtonDown();
+	static void OnTrayLButtonUp();
+	static void OnTrayRButtonDown();
+	static void OnTrayRButtonUp();
+
+
+	//托盘菜单事件
+	static void OnTrayMenuExit();
 } GWindow;

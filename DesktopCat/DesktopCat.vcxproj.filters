@@ -128,6 +128,9 @@
     <ClCompile Include="Action.cpp">
       <Filter>Cat猫\Action动作</Filter>
     </ClCompile>
+    <ClCompile Include="Tray.cpp">
+      <Filter>Direct2D窗口</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DesktopCat.rc">

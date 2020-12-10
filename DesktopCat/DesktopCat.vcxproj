@@ -169,6 +169,7 @@
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Tool.cpp" />
+    <ClCompile Include="Tray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DesktopCat.rc" />

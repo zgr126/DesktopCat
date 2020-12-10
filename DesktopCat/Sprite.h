@@ -58,8 +58,8 @@ public:
 	virtual void Update();
 
 	HRESULT LoadingImage(LPCTSTR, ID2D1RenderTarget*, IWICImagingFactory*);
-	//创建一个新的Animation添加进队列的最前面（可以打断动作）
-	void AddFrontAnimation(UINT fileLine);
+	//创建一个新的Animation添加进队列的最前面（可以打断动作）如果不指定后面2个参数，则代表使用AnimationData文件，如果指定了后面2个参数则使用代码来指定动画类型和附加参数，一般用于行走，奔跑等需要随机指定位置。
+	void AddFrontAnimation(UINT fileLine, int animationStyle = 0, UINT addValue = 0);
 	//创建一个新的Animation添加进队列的最后面
 	void AddBackAnimation(UINT fileLine);
 public:

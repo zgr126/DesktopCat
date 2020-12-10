@@ -7,12 +7,12 @@ struct LPoint final
 	LPoint() :m_x(0), m_y(0) { };
 	LPoint(float _x, float _y) :m_x(_x), m_y(_y) { }
 	LPoint(float _val) :m_x(_val), m_y(_val) { }
-	LPoint operator+(const LPoint& _pt);
-	LPoint operator-(const LPoint& _pt);
-	LPoint operator*(const LPoint& _pt);
-	LPoint operator*(const float& _val);
-	LPoint operator/(const LPoint& _pt);
-	LPoint operator/(const float& _val);
+	LPoint operator+(const LPoint& _pt)const;
+	LPoint operator-(const LPoint& _pt)const;
+	LPoint operator*(const LPoint& _pt)const;
+	LPoint operator*(const float& _val)const;
+	LPoint operator/(const LPoint& _pt)const;
+	LPoint operator/(const float& _val)const;
 	bool operator==(const LPoint& _pt);
 	bool operator==(const float& _val);
 	bool operator!=(const LPoint& _pt);

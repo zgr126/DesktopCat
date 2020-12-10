@@ -7,6 +7,15 @@ double Lin::AngleConversion360(double angle)
 		angle -= 360;
 	return angle;
 }
+double Lin::Minus(double left, double right)
+{
+	return left - right;
+}
+
+double Lin::Division(double top, double bottom)
+{
+	return top / bottom;
+}
 
 int Lin::GetValueCount(const string& str)
 {
@@ -73,4 +82,18 @@ std::wstring Lin::string2wstring(const std::string& str)
 	result.append(buffer);
 	delete[] buffer;
 	return result;
+}
+
+void Lin::WindowAddMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str)
+{
+	AppendMenu(menu, MF_STRING, ID, str);
+	AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+
+}
+
+void Lin::WindowAddBitmapMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str, HBITMAP& hbmp)
+{
+	hbmp = (HBITMAP)LoadImage(NULL, str, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	AppendMenu(menu, MF_BITMAP, ID, (PTSTR)(LONG)hbmp);
+	AppendMenu(menu, MF_SEPARATOR, 0, NULL);
 }

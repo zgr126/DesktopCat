@@ -132,44 +132,46 @@ HRESULT LSprite::LoadingImage(LPCTSTR fileName, ID2D1RenderTarget* pRT, IWICImag
 	return hr;
 }
 
-void LSprite::AddFrontAnimation(UINT fileLine)
+void LSprite::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue)
 {
-	//创建之前若已有动画在播放，则将正在播放的动画初始化
+	//创建之前若已有动画在播放，则释放该动作
 	if (m_AnimationDeque.size() > 0)
 	{
 		auto FrontAnimation = m_AnimationDeque.front();
-		FrontAnimation->BeforeTheAnimationOfSpriteInit();
+		LAnimation::release(&FrontAnimation);
+		m_AnimationDeque.pop_front();
+		LAction::release(&m_Action);
+		//FrontAnimation->BeforeTheAnimationOfSpriteInit();
+	}
+	//创建一个动画
+	auto Animation = LAnimation::create(this);
+	//指定动画数据
+	Animation->PlayAnimation(fileLine, LAnimation::LAnimationStyle(animationStyle), addValue);
+
+	//将动画添加进队列最前面
+	m_AnimationDeque.push_front(Animation);
+}
+
+void LSprite::AddBackAnimation(UINT fileLine)
+{
+	if (m_AnimationDeque.size() > 0)
+	{
+		auto BackAnimation = m_AnimationDeque.back();
+		if (BackAnimation->GetAnimationStyle() == LAnimation::LAnimationStyle::UnTime)
+		{
+			//如果添加之前，队列最后一个动画类型是无限循环，就将它删除
+			m_AnimationDeque.pop_back();
+			LAnimation::release(&BackAnimation);
+		}
 	}
 	//创建一个动画
 	auto Animation = LAnimation::create(this);
 	//指定动画数据
 	Animation->PlayAnimation(fileLine);
 
-	//将动画添加进队列最前面
-	m_AnimationDeque.push_front(Animation);
+	//将动画添加进队列最后面
+	m_AnimationDeque.push_back(Animation);
 }
-
-//void LSprite::AddBackAnimation(UINT fileLine)
-//{
-//	if (m_AnimationDeque.size() > 0)
-//	{
-//		auto BackAnimation = m_AnimationDeque.back();
-//		if (BackAnimation->GetAnimationStyle() == LAnimation::LAnimationStyle::UnTime)
-//		{
-//			//如果添加之前，队列最后一个动画类型是无限循环，就将它删除
-//			m_AnimationDeque.pop_back();
-//			LAnimation::release(&BackAnimation);
-//			//LAction::release(&m_Action);
-//		}
-//	}
-//	//创建一个动画
-//	auto Animation = LAnimation::create(this);
-//	//指定动画数据
-//	Animation->PlayAnimation(fileLine);
-//
-//	//将动画添加进队列最后面
-//	m_AnimationDeque.push_back(Animation);
-//}
 
 void LSprite::SetDrawArea(LPoint& ranks)
 {

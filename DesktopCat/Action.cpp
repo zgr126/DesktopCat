@@ -11,6 +11,15 @@ LAction* LAction::create(LSprite* pSprite, const UINT& countLine)
 	return pAction = nullptr;
 }
 
+LAction* LAction::create(LSprite* pSprite, const int actionStyle, const LPoint& value1, vector<float>& value2)
+{
+	LAction* pAction = new LAction();
+	if (pAction->init(pSprite, actionStyle, value1, value2))
+		return pAction;
+	delete pAction;
+	return pAction = nullptr;
+}
+
 void LAction::release(LAction** pAction)
 {
 	if (!(*pAction))
@@ -48,6 +57,25 @@ bool LAction::init(LSprite* pSprite, const UINT& countLine)
 
 	//可以开始运动了，只用调用一次，移动判断交给GlassWindow。
 	PlayAction();
+	return true;
+}
+
+bool LAction::init(LSprite* pSprite, const int actionStyle, const LPoint& value1, vector<float>& value2)
+{
+	m_Sprite = pSprite;
+	m_ActionStyle.m_Val = LAction::ActionStyle(actionStyle);
+	m_Value1.push_back(static_cast<UINT>(value1.m_x));
+	m_Value1.push_back(static_cast<UINT>(value1.m_y));
+	for (auto item : value2)
+	{
+		m_Value2.push_back(item);
+	}
+	//检查数据
+	Censor();
+
+	//可以开始运动了，只用调用一次，移动判断交给GlassWindow。
+	PlayAction();
+	return true;
 }
 
 void LAction::release()

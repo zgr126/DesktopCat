@@ -85,6 +85,17 @@ void GlassWindow::release(GlassWindow** _pGW)
 LRESULT CALLBACK GlassWindow::WndProc(HWND _hwnd, UINT _message, WPARAM _wParam, LPARAM _lParam)
 {
 	GWindow* GW = GWindow::getInstance();
+	if (_wParam == ID_TRAY)
+	{
+		//处理托盘消息
+		TrayHandleMsg(_lParam);
+		OutputDebugString(L"托盘\n");
+	}
+	else if (ID_ALL_TRAYMENU(_wParam))		//比较所有菜单的ID
+	{
+		//处理托盘菜单消息
+		TrayHandleMenuMsg(_wParam);
+	}
 	switch (_message)
 	{
 		case WM_DESTROY:
@@ -92,7 +103,8 @@ LRESULT CALLBACK GlassWindow::WndProc(HWND _hwnd, UINT _message, WPARAM _wParam,
 			PostQuitMessage(0);
 			break; 
 		case WM_LBUTTONDOWN:
-			GW->WindowMoveArc({ 100,100 }, 360, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
+			//GW->WindowMoveArc({ 100,100 }, 360, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
+			//GW->GetPet()->WalkBy(LPoint{ 400,0 });
 			break;
 		case WM_RBUTTONDOWN: 
 			GW->WindowMoveTo({ 400,150 }, 1000);
@@ -172,8 +184,9 @@ void GlassWindow::initPet()
 	m_Cat = Cat::create(SpriteName, SpriteSuffix, Size.m_Val);
 	m_Cat->SetGlassWindow(this);
 	m_Cat->SetAnchor({ 0 });
-	m_Cat->AddFrontAnimation(3);
-	m_Cat->AddFrontAnimation(20);
+	//m_Cat->WalkBy({ 400,0 });
+	//m_Cat->AddFrontAnimation(3);
+	//m_Cat->AddFrontAnimation(28);
 	//m_Cat->AddAnimation(4);
 }
 
@@ -184,8 +197,8 @@ void GlassWindow::initTray()
 	m_Tray.uID = ID_TRAY;
 	m_Tray.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	m_Tray.uCallbackMessage = WM_MESSAGE;		//自定义的消息名称
-	m_Tray.hIcon = LoadIcon(m_Window->GetWindowWndClass().hInstance, MAKEINTRESOURCE(IDC_DESKTOPCAT));		//托盘图标
-	wsprintf(m_Tray.szTip, TEXT("You Pet!"));
+	m_Tray.hIcon = LoadIcon(m_Window->GetWindowWndClass().hInstance, MAKEINTRESOURCE(IDI_SMALL));		//托盘图标
+	wsprintf(m_Tray.szTip, TEXT("Cat!"));
 
 	Shell_NotifyIcon(NIM_ADD, &m_Tray);//在托盘区添加图标
 }
@@ -201,7 +214,7 @@ void GlassWindow::createWindow(HINSTANCE _hInstance)
 	m_Window->SetWindowSize(SIZE{ 150,200 });		//设置窗口大小
 	m_Window->SetWndProc(&GlassWindow::WndProc);	//窗口回调函数
 	//m_Window->SetPosition(POINT{ 110,0 });
-	m_Window->SethIcon(LoadIcon(_hInstance, MAKEINTRESOURCE(IDC_DESKTOPCAT)));		//设置icon图标
+	m_Window->SethIcon(LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_SMALL)));		//设置icon图标
 	//MoveWindowPosition(0);
 }
 
@@ -224,7 +237,7 @@ void GlassWindow::MoveWindowPosition(const LPoint& destination)
 void GlassWindow::runrelay(int _CmdShow)
 {
 	m_Window->Show(_CmdShow, { 0,0 });
-	LPoint Position(0,0);
+	LPoint Position(400,300);
 	SIZE size = m_Window->GetWindowSize();
 	MoveWindowPosition(Position);
 	SetWindowSize({ static_cast<float>(size.cx), static_cast<float>(size.cy) });
@@ -366,6 +379,9 @@ void GlassWindow::UpdateKeyInput()
 		OutputDebugString(L",");
 		OutputDebugString(to_wstring(GetWindowCenter().m_y).c_str());
 		OutputDebugString(L"\n");
+		POINT MousePostion;
+		GetCursorPos(&MousePostion);
+		m_Cat->RunTo({ static_cast<float>(MousePostion.x),static_cast<float>(MousePostion.y) });
 	}
 	ControlKey = KEY_DOWM(VK_CONTROL);
 }
@@ -373,16 +389,14 @@ void GlassWindow::UpdateKeyInput()
 void GlassWindow::WindowMoveTo(const LPoint& destination, DWORD time)
 {
 	LPoint Destination(static_cast<int>(destination.m_x), static_cast<int>(destination.m_y));
-	OutputDebugString(to_wstring(destination.m_x).c_str());
-	OutputDebugString(L",");
-	OutputDebugString(to_wstring(destination.m_y).c_str());
-	OutputDebugString(L"\n");
 	BeforeTheMoveOfWindowInit(destination, time, WindowMoveStyle::Line);
 }
 
 void GlassWindow::WindowMoveBy(const LPoint& destination, DWORD time)
 {
-	WindowMoveTo(destination, time);
+	LPoint Destination = destination;
+	Destination = Destination + m_Position;
+	WindowMoveTo(Destination, time);
 }
 
 void GlassWindow::WindowMoveArc(LPoint radius, double angle, double circleAngle, DWORD time, TrunStyle trunStyle)

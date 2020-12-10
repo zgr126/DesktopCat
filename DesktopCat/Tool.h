@@ -7,6 +7,12 @@ namespace Lin
 {
 	//将一个角度转换成小于360°的角
 	double AngleConversion360(const double angle);
+	
+	//计算2数差值
+	double Minus(double left, double right);
+
+	//计算2数相除
+	double Division(double top, double bottom);
 
 	//计算str中有几个有效数据，(1,2,3,4)中有4个有效数据
 	int GetValueCount(const string& str);
@@ -160,4 +166,10 @@ namespace Lin
 		}
 	}
 #pragma endregion
+
+
+	//托盘
+	void WindowAddMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str);
+
+	void WindowAddBitmapMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str, HBITMAP& hbmp);
 }

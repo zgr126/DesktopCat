@@ -1,40 +1,40 @@
 #include "Node.h"
 #include <math.h>
 
-LPoint LPoint::operator+(const LPoint& _pt)
+LPoint LPoint::operator+(const LPoint& _pt)const
 {
 	LPoint pt;
 	pt.m_x = this->m_x + _pt.m_x;
 	pt.m_y = this->m_y + _pt.m_y;
 	return pt;
 }
-LPoint LPoint::operator-(const LPoint& _pt)
+LPoint LPoint::operator-(const LPoint& _pt)const
 {
 	LPoint pt;
 	pt.m_x = this->m_x - _pt.m_x;
 	pt.m_y = this->m_y - _pt.m_y;
 	return pt;
 }
-LPoint LPoint::operator*(const LPoint& _pt)
+LPoint LPoint::operator*(const LPoint& _pt)const
 {
 	LPoint pt;
 	pt.m_x = this->m_x * _pt.m_x;
 	pt.m_y = this->m_y * _pt.m_y;
 	return pt;
 }
-LPoint LPoint::operator*(const float& _val)
+LPoint LPoint::operator*(const float& _val)const
 {
 	LPoint pt(_val);
 	return operator*(pt);
 }
-LPoint LPoint::operator/(const LPoint& _pt)
+LPoint LPoint::operator/(const LPoint& _pt)const
 {
 	LPoint pt;
 	pt.m_x = this->m_x / _pt.m_x;
 	pt.m_y = this->m_y / _pt.m_y;
 	return pt;
 }
-LPoint LPoint::operator/(const float& _val)
+LPoint LPoint::operator/(const float& _val)const
 {
 	LPoint pt, Val(_val);
 	pt = operator/(Val);

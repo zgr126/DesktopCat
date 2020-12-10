@@ -1,5 +1,6 @@
 #include "Animation.h"
 #include "Sprite.h"
+#include "Cat.h"
 
 //using namespace Lin;
 
@@ -67,7 +68,7 @@ void LAnimation::AfterTheAnimationOfSpriteInit()
 	m_AnimationStyle.m_Val = LAnimationStyle::None;
 }
 
-bool LAnimation::PlayAnimation(UINT fileLine)
+bool LAnimation::PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle animationStyle, UINT addValue)
 {
 	LFile* pFile = LFile::AddToFilePool(m_AnimationDataFilePath);		//打开文件
 	//开始读取数据
@@ -82,16 +83,26 @@ bool LAnimation::PlayAnimation(UINT fileLine)
 	//读取第2个数据		每帧停留时间
 	SingalData = GetFirst(EntireData, DataMarker);
 	m_vStayTime = LDataPackConversion<UINT>::Conversion(SingalData);
-	//读取第3个数据		动画类型
-	SingalData = GetFirst(EntireData, DataMarker);
-	m_AnimationStyle = LDataConversion<LAnimationStyle>::Conversion(SingalData);
-	//读取第4个数据		附加数据
-	SingalData = GetFirst(EntireData, DataMarker);
-	m_AddValue = LDataConversion<UINT>::Conversion(SingalData);
-	//读取第5个数据		使用Action哪一行的数据
-	SingalData = GetFirst(EntireData, DataMarker);
-	m_ActionTextLine = LDataConversion<UINT>::Conversion(SingalData);
-	LFile::MoveOutFilePool(m_AnimationDataFilePath);					//关闭文件
+	do
+	{
+		//如果第二第三参数指定了，说明是不读取第3，4，5个数据的。
+		if (animationStyle != LAnimationStyle::None)
+		{
+			m_AnimationStyle.m_Val = animationStyle;
+			m_AddValue = addValue;
+			break;	//直接跳出循环
+		}
+		//读取第3个数据		动画类型
+		SingalData = GetFirst(EntireData, DataMarker);
+		m_AnimationStyle = LDataConversion<LAnimationStyle>::Conversion(SingalData);
+		//读取第4个数据		附加数据
+		SingalData = GetFirst(EntireData, DataMarker);
+		m_AddValue = LDataConversion<UINT>::Conversion(SingalData);
+		//读取第5个数据		使用Action哪一行的数据
+		SingalData = GetFirst(EntireData, DataMarker);
+		m_ActionTextLine = LDataConversion<UINT>::Conversion(SingalData);
+		LFile::MoveOutFilePool(m_AnimationDataFilePath);					//关闭文件
+	} while (0);
 
 	//进行数据审查
 	Censor();
@@ -103,7 +114,7 @@ LPoint LAnimation::Update(LTimer* animationTimer)
 	//动画生命结束	等待被释放
 	if (m_isEnd)	return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val, static_cast<float>(m_CountLine.m_Val)));
 	//先判断动画类型由时间主导的情况
-	if (!isTime(animationTimer->GetInterval()))
+	if (!animationTimer || !isTime(animationTimer->GetInterval()))
 	{
 		return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val, static_cast<float>(m_CountLine.m_Val)));
 	}
