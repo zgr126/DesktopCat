@@ -19,3 +19,7 @@
 #include <shellapi.h>
 
 using namespace std;
+
+
+#define Music_Whistle		"\\´µ¿ÚÉÚ.wav"
+#define Music_CatReply		"\\Ã¨½ĞÉù.wav"

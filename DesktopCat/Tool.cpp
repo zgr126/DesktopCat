@@ -1,5 +1,6 @@
 #include "Tool.h"
-
+//≤•∑≈“Ù¿÷µƒlib
+#pragma comment(lib,"winmm.lib")
 
 double Lin::AngleConversion360(double angle)
 {
@@ -96,4 +97,20 @@ void Lin::WindowAddBitmapMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str, HBITMAP& hb
 	hbmp = (HBITMAP)LoadImage(NULL, str, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	AppendMenu(menu, MF_BITMAP, ID, (PTSTR)(LONG)hbmp);
 	AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+}
+
+void Lin::PlayMusic(vector<wstring>& filePath)
+{
+	//À≥–Ú≤•∑≈“Ù¿÷
+	for (auto Name : filePath)
+	{
+		HANDLE handle = CreateThread(NULL, NULL, PlayMusicThread, (void*)Name.c_str(), NULL, NULL);
+		CloseHandle(handle);
+	}
+}
+
+DWORD WINAPI Lin::PlayMusicThread(void* param)
+{
+	PlaySound(LPCWSTR(param), NULL, SND_ASYNC);
+	return 0;
 }

@@ -19,8 +19,11 @@ void GlassWindow::TrayHandleMenuMsg(WPARAM wParam)
 {
 	switch (wParam)
 	{
+		//坐下
+		case Tray_Menu_SitDown_ID:	OnTrayMenuSitDown();	break;
 		//退出
 		case Tray_Menu_Exit_ID:		OnTrayMenuExit();		break;
+		default:return;
 	}
 }
 
@@ -45,11 +48,12 @@ void GlassWindow::OnTrayRButtonUp()
 	//创建菜单
 	HMENU Menu = CreatePopupMenu();
 	//为菜单添加选项
+	WindowAddMenu(Menu, Tray_Menu_SitDown_ID, L"坐下");
 	WindowAddMenu(Menu, Tray_Menu_Exit_ID, L"退出");
+
 	POINT pt;
 	GetCursorPos(&pt);
-	TrackPopupMenu(Menu, TPM_LEFTBUTTON | TPM_HORNEGANIMATION, pt.x, pt.y, NULL, GlassWindow::getInstance()->GetWndEx()->GetWindowHWND(), NULL);
-	DestroyMenu(Menu);		//用完就释放Menu
+	TrackPopupMenu(Menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, NULL, GlassWindow::getInstance()->GetWndEx()->GetWindowHWND(), NULL);
 }
 
 //托盘菜单事件
@@ -57,4 +61,30 @@ void GlassWindow::OnTrayMenuExit()
 {
 	Shell_NotifyIcon(NIM_DELETE, &GlassWindow::getInstance()->GetTray());	//删除托盘的图标
 	GlassWindow::getInstance()->SetExit(true);
+}
+void GlassWindow::OnTrayMenuSitDown()
+{
+	OutputDebugString(L"坐下\n");
+	GlassWindow::getInstance()->GetCat()->Sit();
+}
+
+DWORD WINAPI WindowLogicThread(void* param)
+{
+	static GlassWindow* GW = GlassWindow::instance;
+	static LTimer* timer = LTimerManager::instance->createTimer(Window_Logic_Timer_ID);
+	static UINT NowContinueTime = 0 , ContinueTime = Window_Logic_FPS;
+
+	while (!GW->GetisExit())
+	{
+		LTimerManager::instance->Update();		//定时管理器的更新
+		NowContinueTime += timer->GetInterval();
+		if(NowContinueTime >= ContinueTime)
+		{
+			GW->Draw(nullptr);
+			GW->Update();
+			NowContinueTime = 0;
+		}
+		Sleep(1);
+	}
+	return 0;
 }

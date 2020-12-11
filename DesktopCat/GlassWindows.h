@@ -25,15 +25,18 @@
 #define PI              3.1415926
 #define Angle_To_Radin(_Angle)  (PI/180*(_Angle))    //角度转弧度
 #define InitDirection   180.0                        //Arc运动时 初始运动方向
-#define WM_MESSAGE	WM_USER + 1	//自定义托盘消息
+#define WM_TrayMessage	WM_USER + 1	//自定义托盘消息
 #define ID_TRAY	1				//托盘ID
 
 //托盘菜单ID
 #define Tray_Menu_Exit_ID		301		//退出
+#define Tray_Menu_SitDown_ID	302		//坐下
 #define ID_ALL_TRAYMENU(ID)\
-	ID==Tray_Menu_Exit_ID?1:0
+	ID==Tray_Menu_Exit_ID?1:0 || ID==Tray_Menu_SitDown_ID?1:0
 
-#define Window_Move_Timer_ID		0	//窗口移动定时器的固定ID
+#define Window_Logic_FPS			15	//15ms处理一次逻辑
+#define Window_Logic_Timer_ID		0	//窗口逻辑处理定时器的固定ID
+#define Window_Move_Timer_ID		1	//窗口移动定时器的固定ID
 
 class LWindowEx
 {
@@ -178,7 +181,7 @@ public:
 	static GlassWindow* getInstance() { return instance; }
 	static void release(GlassWindow** _pGW);
 
-	Cat* GetPet() { return m_Cat; }
+	Cat* GetCat() { return m_Cat; }
 	void SetExit(bool _b) { m_isExit = _b; }
 	WindowEx* GetWndEx() { return m_Window; }
 protected:
@@ -187,6 +190,7 @@ protected:
 	virtual void release();
 public:
 	//访问器
+	bool GetisExit() { return m_isExit; }
 	LPoint GetWindowFirst() { return m_WindowFirst; }
 	LPoint GetWindowDestination() { return m_WindowDestination; }
 	SIZE GetWindowSize() { return m_Window->GetWindowSize(); }
@@ -225,4 +229,8 @@ public:
 
 	//托盘菜单事件
 	static void OnTrayMenuExit();
+	static void OnTrayMenuSitDown();
+
 } GWindow;
+//使用一个线程来更新和绘制
+DWORD WINAPI WindowLogicThread(void* param);

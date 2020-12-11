@@ -135,7 +135,7 @@ namespace Lin
 #pragma region vector的增参与删参
 	//增加或删除vector元素	count>0增加若干元素，count<0删除若干元素
 	template<typename T>
-	void AdditionOrDeleteValue(vector<T> vec, int count)
+	void AdditionOrDeleteValue(vector<T>& vec, int count)
 	{
 		if (count > 0)
 		{
@@ -168,8 +168,13 @@ namespace Lin
 #pragma endregion
 
 
-	//托盘
+	//托盘添加菜单
 	void WindowAddMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str);
-
+	//托盘添加图片菜单
 	void WindowAddBitmapMenu(HMENU& menu, UINT_PTR ID, LPCWSTR str, HBITMAP& hbmp);
+
+	//连续播放声音				文件名路径
+	void PlayMusic(vector<wstring>& filePath);
+	//播放音乐线程
+	DWORD WINAPI PlayMusicThread(void* param);
 }

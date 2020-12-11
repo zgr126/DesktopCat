@@ -74,6 +74,8 @@ bool LAnimation::PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle animat
 	//开始读取数据
 	string EntireData = LReadFileLine(pFile, fileLine);		//文件的第fileLine行全部数据
 	FractureBack(EntireData, DataMarkerEnd);				//去掉@后面的数据
+	OutputDebugString(string2wstring(EntireData).c_str());
+	OutputDebugString(L"\n");
 	//读取第0个数据		图片第几行
 	string SingalData = GetFirst(EntireData, DataMarker);
 	m_CountLine = LDataConversion<UINT>::Conversion(SingalData);

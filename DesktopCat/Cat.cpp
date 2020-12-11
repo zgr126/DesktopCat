@@ -26,8 +26,8 @@ bool Cat::init(const string& spriteName, const string& suffix, const LPoint& siz
 	//设置精灵朝向
 	m_Direction = CatDirection::Front;
 	//初始为走路状态（从屏幕外走进来）
-	m_Status = CatStatus::Motion;
-	m_MotionStatus = CatMotionStatus::Walk;
+	m_Status = CatStatus::Idel;
+	m_MotionStatus = CatMotionStatus::None;
 	m_AnimationTimerID = Cat_AnimationTimer_ID;
 	m_NowContinueTime = 0;
 	//初始化随机种子
@@ -37,7 +37,6 @@ bool Cat::init(const string& spriteName, const string& suffix, const LPoint& siz
 	//猫发呆多久后进行运动的定时器
 	m_IdelTimer = LTimerManager::instance->createTimer(Cat_IdelTimer_ID);
 	if (m_IdelTimer == nullptr)	return false;
-
 	return true;
 }
 
@@ -65,9 +64,14 @@ void Cat::Update()
 		}
 		else
 		{
-			//取精灵方向
-			LPoint Area = { 0, static_cast<float>(GetAnimationDataDirection() - FileData_Animation_BeginLine) };
-			SetDrawArea(Area);
+			//如果动画队列不为空，说明需要添加一个站立动画（无限循环）
+			if (m_AnimationDeque.size() == 0)
+			{
+				OutputDebugString(L"添加一个站立动画\n");
+				AddFrontAnimation(GetAnimationDataDirection(), static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Idel, CatMotionStatus::None);
+				LPoint Area = { static_cast<float>(0), static_cast<float>(GetAnimationDataDirection() - FileData_Animation_BeginLine) };
+				SetDrawArea(Area);
+			}
 		}
 	}
 	else if (m_Status == CatStatus::Motion)
@@ -80,8 +84,38 @@ void Cat::Update()
 	}
 	else if (m_Status == CatStatus::Other)
 	{
-
+		//OutputDebugString(L"Other\n");
 	}
+}
+
+void Cat::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue, CatStatus status, CatMotionStatus motionStatus)
+{
+	LSprite::AddFrontAnimation(fileLine, animationStyle, addValue);
+	BeforeTheChangeStatusOfCatInit(status, motionStatus);
+}
+void Cat::AddBackAnimation(UINT fileLine)
+{
+	LSprite::AddBackAnimation(fileLine);
+}
+
+void Cat::CallAnimationBegin()
+{
+	//LSprite::CallAnimationBegin();
+	//OutputDebugString(L"Cat:动画开始\n");
+}
+void Cat::CallAnimationEnd()
+{
+	//LSprite::CallAnimationEnd();
+	//OutputDebugString(L"Cat:动画结束\n");
+	if (m_Status == CatStatus::Other)
+	{
+		BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
+	}
+}
+void Cat::CallAnimationInterrupt()
+{
+	//LSprite::CallAnimationInterrupt();
+	//OutputDebugString(L"Cat:动画被打断\n");
 }
 #pragma endregion
 
@@ -95,7 +129,7 @@ void Cat::MotionTo(const LPoint& destination, double speed, int actionDataLine)
 	//计算猫的方向
 	SetDirection(D);
 	//在队列前插入
-	AddFrontAnimation(GetAnimationDataDirection() + actionDataLine, static_cast<int>(LAnimation::LAnimationStyle::Time), m_MotionTime);		//这里参数为Animation.txt行走动画的行数
+	AddFrontAnimation(GetAnimationDataDirection() + actionDataLine, static_cast<int>(LAnimation::LAnimationStyle::Time), m_MotionTime, m_Status, m_MotionStatus);		//这里参数为Animation.txt行走动画的行数
 	//添加Action
 	vector<float> value2 = { static_cast<float>(m_MotionTime) };
 	LAction* pAction = LAction::create(this, static_cast<int>(LAction::ActionStyle::ToLine), destination, value2);
@@ -195,6 +229,30 @@ UINT Cat::GetAnimationDataDirection()
 	}
 }
 
+
+void Cat::Call()
+{
+	POINT MousePostion;
+	GetCursorPos(&MousePostion);
+	RunTo({ static_cast<float>(MousePostion.x),static_cast<float>(MousePostion.y) });
+	//播放口哨声
+	string Path = ParentPath + GetName() + Music_Whistle;
+	vector<wstring> FilePath = { string2wstring(Path) };
+	PlayMusic(FilePath);
+}
+
+void Cat::Sit()
+{
+	m_GlassWndow->StopMove();
+	//获取动画方向行数
+	UINT FileLine = GetAnimationDataDirection();
+	//切换坐姿
+	AddFrontAnimation(FileLine + Cat_Idel_To_Sit, static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Sit, CatMotionStatus::None);
+	//播放猫声音
+	string Path = ParentPath + GetName() + Music_CatReply;
+	vector<wstring> FilePath = { string2wstring(Path) };
+	PlayMusic(FilePath);
+}
 
 //
 //Cat* Cat::create(string& _SpriteName, string _Suffix, LPoint& _Size)

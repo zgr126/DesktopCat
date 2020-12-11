@@ -46,9 +46,10 @@
 #define Cat_Run_Max			Cat_BackLeft_Run	//Run范围
 #define Cat_Run_Count		8					//Run个数
 //转换。直接+宏定义就算转换完成
-#define Cat_Idel_To_Walk	(Cat_Idle_Count)					//站立行数转换到行走行数
+#define Cat_Idel_To_Walk	(Cat_Idle_Count)	//站立行数转换到行走行数
 #define Cat_Idel_To_Run		(Cat_Idle_Count + Cat_Walk_Count)	//站立行数转到跑步行数
 #define Cat_Walk_To_Run		(Cat_Walk_Count)
+#define Cat_Idel_To_Sit		(Cat_Idel_To_Run + Cat_Run_Count)	//站立转坐姿
 #pragma endregion
 
 #pragma region 一些三角函数值
@@ -87,20 +88,12 @@ class Cat :public LSprite
 public:
 	static Cat* create(const string& spriteName, const string& suffix, const LPoint& size);
 	static void release(Cat**);
-#pragma region 重写基类方法	init,release,Draw,Update
-protected:
-	virtual bool init(const string& spriteName, const string& suffix, const LPoint& size);
-	virtual void release();
-public:
-	virtual void Draw(ID2D1HwndRenderTarget*);
-	virtual void Update();
-#pragma endregion
-
 	//猫状态枚举
 	enum class CatStatus
 	{
 		Idel,		//站立
 		Motion,		//走路或跑步
+		Sit,		//坐下
 		Other		//其他
 	};
 	enum class CatMotionStatus
@@ -119,6 +112,22 @@ public:
 		BackRight = Back + Right,
 		BackLeft = Back + Left
 	};
+#pragma region 重写基类方法	init,release,Draw,Update
+protected:
+	virtual bool init(const string& spriteName, const string& suffix, const LPoint& size);
+	virtual void release();
+public:
+	virtual void Draw(ID2D1HwndRenderTarget*);
+	virtual void Update();
+
+	virtual void AddFrontAnimation(UINT fileLine, int animationStyle = 0, UINT addValue = 0, CatStatus status = CatStatus::Other, CatMotionStatus motionStatus = CatMotionStatus::None);
+	virtual void AddBackAnimation(UINT fileLine);
+
+	virtual void CallAnimationBegin();
+	virtual void CallAnimationEnd();
+	virtual void CallAnimationInterrupt();
+#pragma endregion
+
 private:
 	//猫状态
 	CatStatus m_Status;
@@ -155,6 +164,12 @@ public:
 
 	//通过猫的方向来获取对应Animation.txt的猫方向	注意返回的是站立方向的行数，若要转换成行走方向的行数+Cat_Idel_To_Walk
 	UINT GetAnimationDataDirection();
+
+	//与猫的交互
+	//呼叫猫
+	void Call();
+	//坐下
+	void Sit();
 };
 
 

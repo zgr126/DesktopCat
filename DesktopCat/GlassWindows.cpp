@@ -82,22 +82,15 @@ void GlassWindow::release(GlassWindow** _pGW)
 	(*_pGW) = nullptr;
 }
 
-LRESULT CALLBACK GlassWindow::WndProc(HWND _hwnd, UINT _message, WPARAM _wParam, LPARAM _lParam)
+LRESULT CALLBACK GlassWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	GWindow* GW = GWindow::getInstance();
-	if (_wParam == ID_TRAY)
+	switch (message)
 	{
 		//处理托盘消息
-		TrayHandleMsg(_lParam);
-		OutputDebugString(L"托盘\n");
-	}
-	else if (ID_ALL_TRAYMENU(_wParam))		//比较所有菜单的ID
-	{
+		case WM_TrayMessage:	TrayHandleMsg(lParam);	break;
 		//处理托盘菜单消息
-		TrayHandleMenuMsg(_wParam);
-	}
-	switch (_message)
-	{
+		case WM_COMMAND:		TrayHandleMenuMsg(wParam);	break;
 		case WM_DESTROY:
 			GW->SetExit(true);
 			PostQuitMessage(0);
@@ -110,12 +103,12 @@ LRESULT CALLBACK GlassWindow::WndProc(HWND _hwnd, UINT _message, WPARAM _wParam,
 			GW->WindowMoveTo({ 400,150 }, 1000);
 			break;
 		case WM_SIZE: {
-			LONG_PTR Style = ::GetWindowLongPtr(_hwnd, GWL_STYLE);
+			LONG_PTR Style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
 			Style = Style & ~WS_CAPTION & ~WS_SYSMENU & ~WS_SIZEBOX;
-			::SetWindowLongPtr(_hwnd, GWL_STYLE, Style);
+			::SetWindowLongPtr(hwnd, GWL_STYLE, Style);
 		}
 		default:
-			return DefWindowProc(_hwnd, _message, _wParam, _lParam);
+			return DefWindowProc(hwnd, message, wParam, lParam);
 	}
 }
 
@@ -195,8 +188,8 @@ void GlassWindow::initTray()
 	m_Tray.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
 	m_Tray.hWnd = m_Window->GetWindowHWND();
 	m_Tray.uID = ID_TRAY;
-	m_Tray.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	m_Tray.uCallbackMessage = WM_MESSAGE;		//自定义的消息名称
+	m_Tray.uFlags = NIF_GUID | NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	m_Tray.uCallbackMessage = WM_TrayMessage;		//自定义的消息名称
 	m_Tray.hIcon = LoadIcon(m_Window->GetWindowWndClass().hInstance, MAKEINTRESOURCE(IDI_SMALL));		//托盘图标
 	wsprintf(m_Tray.szTip, TEXT("Cat!"));
 
@@ -263,14 +256,19 @@ void GlassWindow::runrelay(int _CmdShow)
 void GlassWindow::run(int _CmdShow)
 {
 	runrelay(_CmdShow);
+	//创建线程用于更新窗口逻辑
+	HANDLE thread = CreateThread(NULL, NULL, WindowLogicThread, NULL, 0, 0);
 	while (!m_isExit)
 	{
 		dwRet = MsgWaitForMultipleObjects(1, &phWait, FALSE, INFINITE, QS_ALLINPUT);
 		switch (dwRet)
 		{
 			case WAIT_OBJECT_0: {
-				Draw(nullptr);
-				Update();
+				//通知子线程，更新窗口逻辑
+				//m_isLogic = true;
+				//LTimerManager::instance->Update();
+				//Update();
+				//Draw(nullptr);
 			}
 			break;
 			case WAIT_OBJECT_0 + 1: {
@@ -284,8 +282,7 @@ void GlassWindow::run(int _CmdShow)
 			break;
 		}
 	}
-	//释放全局管理器内存
-	LTimerManager::release();
+	//CloseHandle(thread);
 }
 
 void GlassWindow::Draw(ID2D1HwndRenderTarget*)
@@ -298,7 +295,6 @@ void GlassWindow::Draw(ID2D1HwndRenderTarget*)
 
 void GlassWindow::Update()
 {
-	LTimerManager::instance->Update();		//定时管理器的更新
 	m_Cat->Update();
 	if (m_isWindowMove)
 		UpdateWindowMove();
@@ -354,36 +350,45 @@ void GlassWindow::UpdateWindowMoveArc()
 #define KEY_DOWM(vk_c) (GetAsyncKeyState(vk_c) & 0x8000 ? 1 : 0)
 void GlassWindow::UpdateKeyInput()
 {
+	static int F4Key = 0;
+	if (F4Key && !KEY_DOWM(VK_F4))
+	{
+		{
+			//OutputDebugString(L"窗口大小：");
+			//OutputDebugString(to_wstring(m_Window->GetWindowSize().cx).c_str());
+			//OutputDebugString(L",");
+			//OutputDebugString(to_wstring(m_Window->GetWindowSize().cy).c_str());
+			//OutputDebugString(L"\n");
+			//OutputDebugString(L"窗口左上角位置：");
+			//OutputDebugString(to_wstring(GetWindowPosition().m_x).c_str());
+			//OutputDebugString(L",");
+			//OutputDebugString(to_wstring(GetWindowPosition().m_y).c_str());
+			//OutputDebugString(L"\n");
+			//OutputDebugString(L"中心在屏幕上的位置：");
+			//OutputDebugString(to_wstring(GetPosition().m_x).c_str());
+			//OutputDebugString(L",");
+			//OutputDebugString(to_wstring(GetPosition().m_y).c_str());
+			//OutputDebugString(L"\n");
+			//OutputDebugString(L"窗口中心位置：");
+			//OutputDebugString(to_wstring(GetWindowCenter().m_x).c_str());
+			//OutputDebugString(L",");
+			//OutputDebugString(to_wstring(GetWindowCenter().m_y).c_str());
+			//OutputDebugString(L"\n");
+		}
+		//测试动画行
+		//m_Cat->AddFrontAnimation(60, static_cast<int>(LAnimation::LAnimationStyle::Cycle), 3, Cat::CatStatus::Other, Cat::CatMotionStatus::None);
+		//m_Cat->GetGlassWindow()->StopMove();
+		m_Cat->AddFrontAnimation(60);
+	}
+	F4Key = KEY_DOWM(VK_F4);
 	static int ControlKey = 0;
 	if (ControlKey && !KEY_DOWM(VK_CONTROL))
 	{
-		//弹起Control键
-		//OutputDebugString(L"弹起Control键\n");
-		OutputDebugString(L"窗口大小：");
-		OutputDebugString(to_wstring(m_Window->GetWindowSize().cx).c_str());
-		OutputDebugString(L",");
-		OutputDebugString(to_wstring(m_Window->GetWindowSize().cy).c_str());
-		OutputDebugString(L"\n");
-		OutputDebugString(L"窗口左上角位置：");
-		OutputDebugString(to_wstring(GetWindowPosition().m_x).c_str());
-		OutputDebugString(L",");
-		OutputDebugString(to_wstring(GetWindowPosition().m_y).c_str());
-		OutputDebugString(L"\n");
-		OutputDebugString(L"中心在屏幕上的位置：");
-		OutputDebugString(to_wstring(GetPosition().m_x).c_str());
-		OutputDebugString(L",");
-		OutputDebugString(to_wstring(GetPosition().m_y).c_str());
-		OutputDebugString(L"\n");
-		OutputDebugString(L"窗口中心位置：");
-		OutputDebugString(to_wstring(GetWindowCenter().m_x).c_str());
-		OutputDebugString(L",");
-		OutputDebugString(to_wstring(GetWindowCenter().m_y).c_str());
-		OutputDebugString(L"\n");
-		POINT MousePostion;
-		GetCursorPos(&MousePostion);
-		m_Cat->RunTo({ static_cast<float>(MousePostion.x),static_cast<float>(MousePostion.y) });
+		//呼叫猫
+		m_Cat->Call();
 	}
 	ControlKey = KEY_DOWM(VK_CONTROL);
+
 }
 
 void GlassWindow::WindowMoveTo(const LPoint& destination, DWORD time)
