@@ -104,6 +104,8 @@ private:
 	WindowEx* m_Window;
 	NOTIFYICONDATA m_Tray;			//托盘结构体
 	bool m_isExit;
+	bool m_isRightDown;				//是否右键按下拖动窗口
+	POINT m_RightDownPosition;		//右键按下的位置
 	HANDLE phWait;
 	LARGE_INTEGER liDueTime;
 	DWORD dwRet;
@@ -191,6 +193,7 @@ protected:
 public:
 	//访问器
 	bool GetisExit() { return m_isExit; }
+	bool GetisRightDown() { return m_isRightDown; }
 	LPoint GetWindowFirst() { return m_WindowFirst; }
 	LPoint GetWindowDestination() { return m_WindowDestination; }
 	SIZE GetWindowSize() { return m_Window->GetWindowSize(); }
@@ -206,9 +209,10 @@ public:
 		return Position;
 	}
 	NOTIFYICONDATA GetTray() { return m_Tray; }
-	//LPoint GetPosition() { return -10000; }	//在GlassWindow中不允许使用此方法
 
 	void SetisWindowMove(const bool is) { m_isWindowMove = is; }
+	void SetisRightDown(const bool is) { m_isRightDown = is; }
+	void SetRightDownPosition(const POINT& position) { m_RightDownPosition = position; }
 	void SetWindowMoveStyle(const WindowMoveStyle style) { m_WindowMoveStyle = style; }
 	void SetWindowFirst(const LPoint& first) { m_WindowFirst = first; }
 	void SetWindowDestination(const LPoint& destination) { m_WindowDestination = destination; }

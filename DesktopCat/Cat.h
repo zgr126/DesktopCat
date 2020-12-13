@@ -71,7 +71,7 @@
 #define Cos337_5	(0.92387953)
 #pragma endregion
 
-
+#pragma region 猫的Other动作时间范围
 //猫发呆一次时间的范围
 #define Cat_LongIdelTime_Min	4000
 #define Cat_LongIdelTime_Max	8500
@@ -99,8 +99,48 @@
 //兴奋的时间范围
 #define Cat_LongSwayTime_Min	1500
 #define Cat_LongSwayTime_Max	4000
+#pragma endregion
 //猫睡觉样式
 #define Cat_Sleep_Style	3
+
+#pragma region 猫的一些动作转换概率
+//走路转换站立或者其他的概率
+#define Walk_To_Idel		90		//走路转换站立的概率
+#define Walk_To_Other		10		//走路转换其他动作的概率
+//Other类型每个动作发生的概率
+#define Lie_Probability			15	//趴下发生的概率
+#define BoringLie_Probability	10	//无聊地趴下发生的概率
+#define Lick_Probability		25	//舔爪子发生的概率
+#define Scratch_Probability		25	//抓地板发生的概率
+#define Sniff_Probability		25	//闻发生的概率
+//久坐后会发生一些事情的概率
+#define LongSit_To_Lie_Probability		10		//久坐后趴下的概率
+#define LongSit_To_Boring_Probability	5		//久坐后无聊地趴下的概率
+#define LongSit_To_Dig_Probability		20		//久坐后背对画圈圈的概率
+#define LongSit_To_Lick_Probability		20		//久坐后舔抓的概率
+#define LongSit_To_Paw_Probability		20		//久坐后抓虫子的概率
+#define LongSit_To_Relaex_Probability	20		//久坐后四角朝天的概率
+#define LongSit_To_Sleep_Probability	5		//久坐后睡觉的概率
+//站立时被点击发生一些事情的概率
+#define OnClick_Idel_To_Sniff_Probability	35	//站立时被点击，触发闻的概率
+#define OnClick_Idel_To_Lie_Probability		25	//站立时被点击，触发趴下的概率
+#define OnClick_Idel_To_Relaex_Probability	30	//站立时被点击，触发四角朝天的概率
+//坐下时被点击发生一些事情的概率
+#define OnClick_Sit_To_Stretch_Probability	50	//坐下时被点击，触发伸懒腰的概率
+#define OnClick_Sit_To_Scared_Probability	50	//坐下时被点击，触发惊吓的概率
+//睡觉时被点击发生一些事情的概率
+#define OnClick_Sleep_To_Stretch_Probability	75	//睡觉时被点击，触发惊吓的概率
+#define OnClick_Sleep_To_Scared_Probability		25	//睡觉时被点击，触发惊吓的概率
+//趴下转换概率
+#define Lie_To_BoringLie_Probability	50		//趴下转无聊地趴下的概率
+#define Lie_To_Sleep_Probability		35		//趴下转睡觉的概率
+#define Lie_To_Lie_Probability			15		//继续趴下的概率
+//无聊地趴下转换概率
+#define BoringLie_To_BoringLie_Probability	15	//继续无聊地趴下的概率			
+#define BoringLie_To_Sleep_Probability		80	//转睡觉的概率
+
+#pragma endregion
+
 
 #define Cat_Walk_Speed			80		//80像素/秒
 #define Cat_Run_Speed			150		//150像素/秒
@@ -144,19 +184,19 @@ public:
 	{
 		None,
 		//值是对应AnimationData.txt的行数
-		Sleep		= 34,		//睡觉
-		Scared		= 40,		//惊吓
-		Lie			= 42,		//趴下
-		Dig			= 44,		//背对画圈圈
-		BoringLie	= 46,		//无趣的趴下
-		Lick		= 48,		//舔爪子
-		Paw			= 49,		//抓虫子
-		Relaex		= 51,		//四角朝天
-		Scratch		= 53,		//抓地板
-		Sniff		= 55,		//闻
-		Stretch		= 57,		//伸懒腰
-		Sway		= 59,		//兴奋
-		Attack		= 61,		//攻击
+		Sleep		= 35,		//睡觉
+		Scared		= 41,		//惊吓
+		Lie			= 43,		//趴下
+		Dig			= 45,		//背对画圈圈
+		BoringLie	= 47,		//无趣的趴下
+		Lick		= 49,		//舔爪子
+		Paw			= 50,		//抓虫子
+		Relaex		= 52,		//四角朝天
+		Scratch		= 54,		//抓地板
+		Sniff		= 56,		//闻
+		Stretch		= 58,		//伸懒腰
+		Sway		= 60,		//兴奋
+		Attack		= 62,		//攻击
 	};
 #pragma region 重写基类方法	init,release,Draw,Update
 protected:
@@ -204,7 +244,6 @@ private:
 	void UpdateSit();
 	void UpdateSleep();
 	void UpdateOther();
-	void OnClick();			//被鼠标点击
 public:
 	//猫运动
 	void WalkTo(const LPoint& destination);
@@ -226,6 +265,7 @@ public:
 	CatDirection GetAnimationVertical();
 	//自动判断CatOtherStatus状态并设置相应动画
 	void AutoSetOtherStatus();
+	void OnClick();			//被鼠标点击
 
 	//与猫的交互
 	//呼叫猫

@@ -21,7 +21,7 @@ class LSprite;
 #define DataMarkerEnd				'@'			//终止符（用于标记数据结束）
 #endif
 //行格式
-#define FileData_Animation_BeginLine		2		//AnimationData.txt有效数据开始行数
+#define FileData_Animation_BeginLine		3		//AnimationData.txt有效数据开始行数
 //有效数据参数格式
 #define GetFileData_Animation_CountLine		0		//第0个位置参数存放：该动画选自图片的第n行
 #define GetFileData_Animation_PlayOrder		1		//第1个位置参数存放：该动画一个周期内帧的切换顺序 如：(0,1,2,3)

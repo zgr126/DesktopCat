@@ -98,11 +98,24 @@ LRESULT CALLBACK GlassWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		case WM_LBUTTONDOWN:
 			//GW->WindowMoveArc({ 100,100 }, 360, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
 			//GW->GetPet()->WalkBy(LPoint{ 400,0 });
-			GW->GetCat()->Scared();
+			//GW->GetCat()->Scared();
+			GW->GetCat()->OnClick();
 			break;
 		case WM_RBUTTONDOWN: 
-			//GW->WindowMoveTo({ 400,150 }, 1000);
-			GW->WindowMoveArc({ 100,100 }, 180, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
+		{
+			OutputDebugString(L"右键按下\n");
+			GW->GetCat()->Idel();
+			GW->StopMove();
+			GW->SetisRightDown(true);
+			POINT pt;
+			GetCursorPos(&pt);	//获取当前左键点击的坐标
+			GW->SetRightDownPosition(pt);
+		}
+			break;
+		case WM_RBUTTONUP:
+			OutputDebugString(L"右键弹起\n");
+			GW->SetisRightDown(false);
+			GW->SetRightDownPosition({ 0 });
 			break;
 		case WM_SIZE: {
 			LONG_PTR Style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
@@ -301,6 +314,19 @@ void GlassWindow::Update()
 	if (m_isWindowMove)
 		UpdateWindowMove();
 	UpdateKeyInput();
+	//右键窗口移动的的处理
+	if (m_isRightDown)
+	{
+		POINT pt;
+		POINT MouseDown = m_RightDownPosition;	//获取鼠标左键点击时的位置
+		POINT WindowPoint = { static_cast<LONG>(GetPosition().m_x), static_cast<LONG>(GetPosition().m_y) };
+		SIZE Size = GetWindowSize();
+		RECT DesktopSize;
+		GetWindowRect(GetDesktopWindow(), &DesktopSize);
+		GetCursorPos(&pt);		//获取当前鼠标移动的位置
+		MoveWindowPosition({ static_cast<float>(WindowPoint.x += (pt.x - MouseDown.x)), static_cast<float>(WindowPoint.y += (pt.y - MouseDown.y)) });;
+		m_RightDownPosition = pt;
+	}
 }
 
 void GlassWindow::UpdateWindowMove()
@@ -380,7 +406,7 @@ void GlassWindow::UpdateKeyInput()
 		//测试动画行
 		//m_Cat->AddFrontAnimation(60, static_cast<int>(LAnimation::LAnimationStyle::Cycle), 3, Cat::CatStatus::Other, Cat::CatMotionStatus::None);
 		//m_Cat->GetGlassWindow()->StopMove();
-		m_Cat->AddFrontAnimation(60);
+		m_Cat->AddFrontAnimation(2);
 	}
 	F4Key = KEY_DOWM(VK_F4);
 	static int ControlKey = 0;
