@@ -37,11 +37,11 @@ void LWindowEx::Show(int _CmdShow, POINT postion)
 {		//显示窗口
 	m_WndEx.style = m_ClassStyle;
 	m_WndEx.lpfnWndProc = static_cast<WNDPROC>(m_WndProc);
-	m_WndEx.hIcon = nullptr;
+	//m_WndEx.hIcon = LoadIcon(m_WndEx.hInstance, MAKEINTRESOURCE(IDI_LOGO));
 	m_WndEx.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	m_WndEx.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	///窗口注册类名已在SetClassName实现了
-	m_WndEx.hIconSm = nullptr;
+	//m_WndEx.hIconSm = LoadIcon(m_WndEx.hInstance, MAKEINTRESOURCE(IDI_LOGO));
 
 	RegisterClassExW(&m_WndEx);
 
@@ -223,6 +223,7 @@ void GlassWindow::createWindow(HINSTANCE _hInstance)
 	m_Window->SetWndProc(&GlassWindow::WndProc);	//窗口回调函数
 	//m_Window->SetPosition(POINT{ 110,0 });
 	m_Window->SethIcon(LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_SMALL)));		//设置icon图标
+	//m_Window->SethIcon((HICON)LoadImage(NULL, L"Logo.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE));		//设置icon图标
 	//MoveWindowPosition(0);
 }
 
