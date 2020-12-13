@@ -65,7 +65,12 @@ void GlassWindow::OnTrayMenuExit()
 void GlassWindow::OnTrayMenuSitDown()
 {
 	OutputDebugString(L"×øÏÂ\n");
-	GlassWindow::getInstance()->GetCat()->Sit();
+	UINT SitTime = Range(Cat_LongSitTime_Min, Cat_LongSitTime_Max);
+	GlassWindow::getInstance()->GetCat()->Sit(SitTime);
+	//²¥·ÅÃ¨ÉùÒô
+	string Path = ParentPath + GlassWindow::getInstance()->GetCat()->GetName() + Music_CatReply;
+	vector<wstring> FilePath = { string2wstring(Path) };
+	PlayMusic(FilePath);
 }
 
 DWORD WINAPI WindowLogicThread(void* param)
@@ -80,8 +85,8 @@ DWORD WINAPI WindowLogicThread(void* param)
 		NowContinueTime += timer->GetInterval();
 		if(NowContinueTime >= ContinueTime)
 		{
-			GW->Draw(nullptr);
 			GW->Update();
+			GW->Draw(nullptr);
 			NowContinueTime = 0;
 		}
 		Sleep(1);

@@ -3,6 +3,8 @@
 #include <tuple>
 
 
+#define Range(Min,Max)	(rand() % (Max - Min) + Min)
+
 namespace Lin
 {
 	//将一个角度转换成小于360°的角
@@ -166,6 +168,29 @@ namespace Lin
 		}
 	}
 #pragma endregion
+
+	//随机返回一个vec中的元素，每个元素都有相同的机会被抽中
+	template<typename T>
+	T GetRange(const vector<T>& vec)
+	{
+		int index = rand() % vec.size();
+		return vec[index];
+	}
+	//随机返回一个vec中的元素，每个元素被抽中的概率为对应的probability元素的值（百分比）。注意：probability每个元素相加后的值必须等于100
+	template<typename T>
+	T GetRange(const vector<T>& vec, const vector<UINT>& probability)
+	{
+		//从[1,100]中随机抽一个整数
+		int Number = rand() % 100 + 1;
+		UINT Area = 0, index = 0;
+		for (auto item : probability)
+		{
+			Area += item;
+			if (Number <= Area)	break;
+			++index;
+		}
+		return vec[index];
+	}
 
 
 	//托盘添加菜单

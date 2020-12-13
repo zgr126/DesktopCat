@@ -140,8 +140,6 @@ private:
 	void createWindow(HINSTANCE);
 	void createRefreshTimer();			//窗口绘制、逻辑处理的定时器
 
-	//将窗口移动到指定位置
-	void MoveWindowPosition(const LPoint&);
 
 	//计算A绕C旋转angle度后所在的位置，radius为-1时自动计算旋转半径
 	LPoint CalculationArc(const LPoint& A, const LPoint& C, double angle, double circleAngle = -1, LPoint radius = -1, TrunStyle trunStyle = TrunStyle::Clockwise);
@@ -176,6 +174,8 @@ public:
 	void AfterTheMoveOfWindowInit();
 	//停止窗口的移动（用于打断之类的操作）
 	void StopMove();
+	//将窗口移动到指定位置
+	void MoveWindowPosition(const LPoint&);
 
 	static GlassWindow* create(HINSTANCE _hInstance);
 	static GlassWindow* getInstance() { return instance; }

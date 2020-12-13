@@ -73,8 +73,34 @@
 
 
 //猫发呆一次时间的范围
-#define Cat_IdelEntireTime_Min	4000
-#define Cat_IdelEntireTime_Max	8500
+#define Cat_LongIdelTime_Min	4000
+#define Cat_LongIdelTime_Max	8500
+//猫久坐的时间范围
+#define Cat_LongSitTime_Min		10000
+#define Cat_LongSitTime_Max		30000
+//猫躺下的时间范围
+#define Cat_LongLieTime_Min		10000
+#define Cat_LongLieTime_Max		30000
+//猫背对画圈圈的时间范围
+#define Cat_LongDigTime_Min		10000
+#define Cat_LongDigTime_Max		30000
+//猫舔爪子的时间范围
+#define Cat_LongLickTime_Min	10000
+#define Cat_LongLickTime_Max	30000
+//猫四角朝天的时间范围
+#define Cat_LongRelaexTime_Min	10000
+#define Cat_LongRelaexTime_Max	30000
+//抓地板的时间范围
+#define Cat_LongScratchTime_Min	3000
+#define Cat_LongScratchTime_Max	12000
+//闻的时间范围
+#define Cat_LongSniffTime_Min	2000
+#define Cat_LongSniffTime_Max	7000
+//兴奋的时间范围
+#define Cat_LongSwayTime_Min	1500
+#define Cat_LongSwayTime_Max	4000
+//猫睡觉样式
+#define Cat_Sleep_Style	3
 
 #define Cat_Walk_Speed			80		//80像素/秒
 #define Cat_Run_Speed			150		//150像素/秒
@@ -94,6 +120,7 @@ public:
 		Idel,		//站立
 		Motion,		//走路或跑步
 		Sit,		//坐下
+		Sleep,		//睡觉
 		Other		//其他
 	};
 	enum class CatMotionStatus
@@ -112,6 +139,25 @@ public:
 		BackRight = Back + Right,
 		BackLeft = Back + Left
 	};
+	//猫的其他状态
+	enum class CatOtherStatus
+	{
+		None,
+		//值是对应AnimationData.txt的行数
+		Sleep		= 34,		//睡觉
+		Scared		= 40,		//惊吓
+		Lie			= 42,		//趴下
+		Dig			= 44,		//背对画圈圈
+		BoringLie	= 46,		//无趣的趴下
+		Lick		= 48,		//舔爪子
+		Paw			= 49,		//抓虫子
+		Relaex		= 51,		//四角朝天
+		Scratch		= 53,		//抓地板
+		Sniff		= 55,		//闻
+		Stretch		= 57,		//伸懒腰
+		Sway		= 59,		//兴奋
+		Attack		= 61,		//攻击
+	};
 #pragma region 重写基类方法	init,release,Draw,Update
 protected:
 	virtual bool init(const string& spriteName, const string& suffix, const LPoint& size);
@@ -120,7 +166,7 @@ public:
 	virtual void Draw(ID2D1HwndRenderTarget*);
 	virtual void Update();
 
-	virtual void AddFrontAnimation(UINT fileLine, int animationStyle = 0, UINT addValue = 0, CatStatus status = CatStatus::Other, CatMotionStatus motionStatus = CatMotionStatus::None);
+	virtual UINT AddFrontAnimation(UINT fileLine, int animationStyle = 0, UINT addValue = 0, CatStatus status = CatStatus::Other, CatMotionStatus motionStatus = CatMotionStatus::None);
 	virtual void AddBackAnimation(UINT fileLine);
 
 	virtual void CallAnimationBegin();
@@ -131,24 +177,34 @@ public:
 private:
 	//猫状态
 	CatStatus m_Status;
+	//猫状态在Other时，记录哪一种Other
+	CatOtherStatus m_OtherStatus;
 	//猫运动状态
 	CatMotionStatus m_MotionStatus;
 	//猫朝向
 	CatDirection m_Direction;
 	//猫发呆定时器
 	LTimer* m_IdelTimer;
-	//猫发呆一次的时间(随机1-5秒)
-	UINT m_EntireIdelTime;
+	//当前状态的持续时间
+	UINT m_ContinueTime;
 	//猫从动画开始到现在的时间
 	UINT m_NowContinueTime;
-	//猫走路/运动时间，通过计算得出
-	UINT m_MotionTime;
 	//猫移动范围
 	LPoint m_MoveRange;
+	//是否被命令
+	bool m_isCommand;
 private:
 	void MotionTo(const LPoint& destination, double speed, int actionDataLine);
 	//改变猫状态之前的一些初始化
 	void BeforeTheChangeStatusOfCatInit(CatStatus status, CatMotionStatus motionStatus);
+
+	//状态更新
+	void UpdateIdel();
+	void UpdateMotion();
+	void UpdateSit();
+	void UpdateSleep();
+	void UpdateOther();
+	void OnClick();			//被鼠标点击
 public:
 	//猫运动
 	void WalkTo(const LPoint& destination);
@@ -164,119 +220,44 @@ public:
 
 	//通过猫的方向来获取对应Animation.txt的猫方向	注意返回的是站立方向的行数，若要转换成行走方向的行数+Cat_Idel_To_Walk
 	UINT GetAnimationDataDirection();
+	//获取猫水平方向上的方向
+	CatDirection GetAnimationHorizontal();
+	//获取猫竖直方向上的方向
+	CatDirection GetAnimationVertical();
+	//自动判断CatOtherStatus状态并设置相应动画
+	void AutoSetOtherStatus();
 
 	//与猫的交互
 	//呼叫猫
 	void Call();
+	//惊吓
+	void Scared();
+	//非与猫的交互
+	//站立
+	void Idel();
 	//坐下
-	void Sit();
+	void Sit(UINT addValue);
+	//睡觉	睡觉样式：有3种	这个是无限睡觉
+	void Sleep(UINT sleepStyle);
+	//趴下	趴的样式：0为趴下，1为无聊的趴下
+	void Lie(UINT lieStyle, UINT addValue);
+	void BoringLie(UINT addValue);
+	//背对画圈圈
+	void Dig(UINT addValue);
+	//舔爪子
+	void Lick(UINT addValue);
+	//抓虫子
+	void Paw(UINT addValue);
+	//四角朝天
+	void Relaex(UINT addValue);
+	//抓地板
+	void Scratch(UINT addValue);
+	//闻
+	void Sniff(UINT addValue);
+	//伸懒腰
+	void Stretch();
+	//兴奋		动画类型，可以是周期或者时间主导或者次数主导
+	void Sway(UINT addValue);
+	//攻击
+	void Attack(UINT addValue);
 };
-
-
-
-
-
-//#include "Animation.h"
-//#include "Timer.h"
-//
-//class GlassWindow;
-//
-//#define Cat_Idel_TimerID			10		//猫发呆定时器的固定ID
-//
-//class Cat :public LSprite
-//{
-//public:
-//	//静态变量、方法
-//	static Cat* create(string& _SpriteName, string _Suffix, LPoint& _Size);
-//	static void release(Cat**);
-//
-//public:
-//	//枚举
-//	enum class HousePetDirection
-//	{		//角色朝向(8个方向)
-//		Top, Bottom, Left, Right,
-//		LeftTop, RightTop, LeftBottom, RightBottom,
-//		None,	//Null表示无朝向 特殊动作结束时会设置Null以便AI可以朝随意方向运动（比如朝左伸懒腰结束后 可以往右走）
-//	};
-//	enum class HousePetMode
-//	{			//状态
-//		Idel,		//发呆
-//		Move,		//运动
-//		Special		//专有动作
-//	};
-//	typedef enum HousePetPrefabAnimation
-//	{	//角色预制动画	(枚举值对应文件ActionData文件中动画数据的标号)
-//		Attack,		//抓虫子 
-//		Balnk,		//眨眼（正坐）
-//		Dig,		//背对着抓地板
-//		Ennui,		//趴在地上摇尾巴
-//		Fly,		//趴在地上无精打采
-//		Lick,		//舔爪子
-//		Paw,		//抓一下地板
-//		Relax,		//四脚朝天
-//		Scratch,	//刮地板
-//		Sleep1,		//蜷缩身体睡觉
-//		Sleep2,		//打呼噜
-//		Sleep3,		//困了揉眼睛
-//		Sniff,		//嗅（站着）
-//		Stretch,	//伸懒腰
-//		Sway,		//兴奋地摇尾巴
-//		Tail,		//背对着发呆（摇尾巴）
-//		BottomRun,		//奔跑	↓
-//		LeftRun,		//奔跑	←
-//		RightRun,		//奔跑	→
-//		TopRun,			//奔跑	↑
-//		LeftBottomRun,	//奔跑	↙
-//		RightBottomRun,	//奔跑	↘
-//		RightTopRun,	//奔跑	↗
-//		LeftTopRun,		//奔跑	↖
-//		BottomWalk,		//走路	↓
-//		LeftWalk,		//走路	←
-//		RightWalk,		//走路	→
-//		TopWalk,		//走路	↑
-//		LeftBottomWalk,	//走路	↙
-//		RightBottomWalk,//走路	↘
-//		RightTopWalk,	//走路	↗
-//		LeftTopWalk,	//走路	↖
-//		BottomIdel,		//站立	↓
-//		LeftIdel,		//站立	←
-//		RightIdel,		//站立	→
-//		TopIdel,		//站立	↑
-//		LeftBottomIdel,	//站立	↙
-//		RightBottomIdel,//站立	↘
-//		RightTopIdel,	//站立	↗
-//		LeftTopIdel,	//站立	↖
-//	} HPA;
-//protected:
-//	//成员变量
-//	Animation* m_Animation;
-//	HousePetDirection m_Direction;	//当前朝向
-//	HousePetMode m_PetMode;			//运动状态
-//	GlassWindow* m_Window;			//宠物窗口句柄
-//	LTimer* m_IdelTime;				//发呆时间
-//protected:
-//	//保护方法
-//	virtual bool init(string& _SpriteName, string _Suffix, LPoint& _Size);
-//	virtual void release();
-//public:
-//	//公开方法
-//	Cat();
-//
-//	virtual void Draw(ID2D1HwndRenderTarget*);
-//	virtual void Update();
-//
-//	/*
-//		_FileLine	读取文件第_FileLine个动画数据	(从0开始)
-//		_Style		动画类型
-//		_Val		当_Style为Cycle时	_Val为动画循环次数
-//					当_Style为Time时		_Val为动画固定播放时间
-//					当_Style为UnTime时	_Val可以是任意值 因为_Val会被忽略*/
-//	void PlayAnimation(int _FileLine, LAnimation::LAnimationStyle _Style, DWORD _Val, Cat::HousePetDirection _Direction);
-//
-//private:
-//	void AI();		//动画播完时 交给AI控制
-//	void Idel();	//发呆
-//
-//public:
-//	GlassWindow* SetGlassWindow(GlassWindow* GWindow) { m_Window = GWindow; }
-//};

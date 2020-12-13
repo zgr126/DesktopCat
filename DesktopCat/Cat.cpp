@@ -27,13 +27,15 @@ bool Cat::init(const string& spriteName, const string& suffix, const LPoint& siz
 	m_Direction = CatDirection::Front;
 	//初始为走路状态（从屏幕外走进来）
 	m_Status = CatStatus::Idel;
+	m_OtherStatus = CatOtherStatus::None;
 	m_MotionStatus = CatMotionStatus::None;
 	m_AnimationTimerID = Cat_AnimationTimer_ID;
 	m_NowContinueTime = 0;
+	m_isCommand = false;
 	//初始化随机种子
 	srand(time(0));
 	//随机一次发呆时间
-	m_EntireIdelTime = rand() % (Cat_IdelEntireTime_Max - Cat_IdelEntireTime_Min) + Cat_IdelEntireTime_Min;
+	m_ContinueTime = rand() % (Cat_LongIdelTime_Max - Cat_LongIdelTime_Min) + Cat_LongIdelTime_Min;
 	//猫发呆多久后进行运动的定时器
 	m_IdelTimer = LTimerManager::instance->createTimer(Cat_IdelTimer_ID);
 	if (m_IdelTimer == nullptr)	return false;
@@ -57,41 +59,33 @@ void Cat::Update()
 	m_NowContinueTime += m_IdelTimer->GetInterval();
 	if (m_Status == CatStatus::Idel)
 	{
-		//发呆到达时间
-		if (m_NowContinueTime >= m_EntireIdelTime)
-		{
-			RangeMotion();
-		}
-		else
-		{
-			//如果动画队列不为空，说明需要添加一个站立动画（无限循环）
-			if (m_AnimationDeque.size() == 0)
-			{
-				OutputDebugString(L"添加一个站立动画\n");
-				AddFrontAnimation(GetAnimationDataDirection(), static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Idel, CatMotionStatus::None);
-				LPoint Area = { static_cast<float>(0), static_cast<float>(GetAnimationDataDirection() - FileData_Animation_BeginLine) };
-				SetDrawArea(Area);
-			}
-		}
+		UpdateIdel();
 	}
 	else if (m_Status == CatStatus::Motion)
 	{
-		//如果达到运动时间，更改参数
-		if (m_NowContinueTime >= m_MotionTime)
-		{
-			BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
-		}
+		UpdateMotion();
+	}
+	else if (m_Status == CatStatus::Sit)
+	{
+		OutputDebugString(L"Update Sit\n");
+		UpdateSit();
+	}
+	else if (m_Status == CatStatus::Sleep)
+	{
+		UpdateSleep();
 	}
 	else if (m_Status == CatStatus::Other)
 	{
-		//OutputDebugString(L"Other\n");
+		OutputDebugString(L"Update Other\n");
+		UpdateOther();
 	}
 }
 
-void Cat::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue, CatStatus status, CatMotionStatus motionStatus)
+UINT Cat::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue, CatStatus status, CatMotionStatus motionStatus)
 {
-	LSprite::AddFrontAnimation(fileLine, animationStyle, addValue);
+	UINT AddValue = LSprite::AddFrontAnimation(fileLine, animationStyle, addValue);
 	BeforeTheChangeStatusOfCatInit(status, motionStatus);
+	return AddValue;
 }
 void Cat::AddBackAnimation(UINT fileLine)
 {
@@ -100,13 +94,11 @@ void Cat::AddBackAnimation(UINT fileLine)
 
 void Cat::CallAnimationBegin()
 {
-	//LSprite::CallAnimationBegin();
-	//OutputDebugString(L"Cat:动画开始\n");
+	LSprite::CallAnimationBegin();
 }
 void Cat::CallAnimationEnd()
 {
-	//LSprite::CallAnimationEnd();
-	//OutputDebugString(L"Cat:动画结束\n");
+	LSprite::CallAnimationEnd();
 	if (m_Status == CatStatus::Other)
 	{
 		BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
@@ -114,8 +106,7 @@ void Cat::CallAnimationEnd()
 }
 void Cat::CallAnimationInterrupt()
 {
-	//LSprite::CallAnimationInterrupt();
-	//OutputDebugString(L"Cat:动画被打断\n");
+	LSprite::CallAnimationInterrupt();
 }
 #pragma endregion
 
@@ -125,13 +116,13 @@ void Cat::MotionTo(const LPoint& destination, double speed, int actionDataLine)
 	//计算与终点的距离，x轴，y轴方向
 	LPoint D = destination - m_GlassWndow->GetPosition();
 	//计算运动时间
-	m_MotionTime = Division(sqrt(pow(D.m_x, 2) + pow(D.m_y, 2)) * M_To_MS, speed);
+	m_ContinueTime = Division(sqrt(pow(D.m_x, 2) + pow(D.m_y, 2)) * M_To_MS, speed);
 	//计算猫的方向
 	SetDirection(D);
 	//在队列前插入
-	AddFrontAnimation(GetAnimationDataDirection() + actionDataLine, static_cast<int>(LAnimation::LAnimationStyle::Time), m_MotionTime, m_Status, m_MotionStatus);		//这里参数为Animation.txt行走动画的行数
+	AddFrontAnimation(GetAnimationDataDirection() + actionDataLine, static_cast<int>(LAnimation::LAnimationStyle::Time), m_ContinueTime, m_Status, m_MotionStatus);		//这里参数为Animation.txt行走动画的行数
 	//添加Action
-	vector<float> value2 = { static_cast<float>(m_MotionTime) };
+	vector<float> value2 = { static_cast<float>(m_ContinueTime) };
 	LAction* pAction = LAction::create(this, static_cast<int>(LAction::ActionStyle::ToLine), destination, value2);
 }
 
@@ -141,6 +132,108 @@ void Cat::BeforeTheChangeStatusOfCatInit(CatStatus status, CatMotionStatus motio
 	m_MotionStatus = motionStatus;
 	m_NowContinueTime = 0;
 	m_IdelTimer->Reset();
+}
+
+void Cat::UpdateIdel()
+{
+	//发呆到达时间
+	if (m_NowContinueTime >= m_ContinueTime)
+	{
+		//有10%的概率坐下，90%的概率走路
+		vector<CatStatus> vCatStatus = { CatStatus::Sit, CatStatus::Motion };
+		vector<UINT> vProbability = { 10,90 };
+		CatStatus Status = GetRange(vCatStatus, vProbability);
+		if (Status == CatStatus::Motion)
+		{
+			RangeMotion();
+		}
+		else if (Status == CatStatus::Sit)
+		{
+			//随机一个久坐时间
+			UINT SitTime = rand() % (Cat_LongSitTime_Max - Cat_LongSitTime_Min) + Cat_LongSitTime_Min;
+			Sit(SitTime);
+		}
+	}
+	else
+	{
+		//如果动画队列不为空，说明需要添加一个站立动画（无限循环）
+		if (m_AnimationDeque.size() == 0)
+		{
+			//添加一个站立动画
+			Idel();
+		}
+	}
+}
+void Cat::UpdateMotion()
+{
+	//如果时间未到，直接返回
+	if (m_NowContinueTime < m_ContinueTime)	return;
+	if (m_isCommand)
+	{
+		//如果是被命令的即呼叫
+		m_isCommand = false;	//重置
+		BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
+		return;
+	}
+	//如果运动结束
+	vector<CatStatus> vStatus = { CatStatus::Other, CatStatus::Motion };
+	vector<UINT> vProbability = { 10,90 };
+	CatStatus Status = GetRange(vStatus, vProbability);
+	switch (Status)
+	{
+		case CatStatus::Other:		//小概率
+		{
+			vector<CatOtherStatus> vStatus = { CatOtherStatus::Lie,CatOtherStatus::BoringLie, CatOtherStatus::Lick, CatOtherStatus::Scratch, CatOtherStatus::Sniff };
+			vector<UINT> vProbability = { 15,10,25,25,25 };
+			m_OtherStatus = GetRange(vStatus, vProbability);
+			AutoSetOtherStatus();
+		}
+		break;
+		case CatStatus::Motion:		//大概率
+			BeforeTheChangeStatusOfCatInit(CatStatus::Idel, CatMotionStatus::None);
+		break;
+	}
+}
+void Cat::UpdateSit()
+{
+	//时间未到
+	if (m_NowContinueTime < m_ContinueTime)	return;
+	//如果久坐
+	vector<CatOtherStatus> vStatus = { CatOtherStatus::Lie, CatOtherStatus::BoringLie, CatOtherStatus::Dig, CatOtherStatus::Lick, CatOtherStatus::Paw, CatOtherStatus::Relaex, CatOtherStatus::Sleep };
+	vector<UINT> vProbability = { 20,10,14,14,14,14,14 };
+	m_OtherStatus = GetRange(vStatus, vProbability);
+	AutoSetOtherStatus();
+	OutputDebugString(L"添加新动作\n");
+}
+void Cat::UpdateSleep()
+{
+	//不与猫交互，猫永远不会醒来
+}
+void Cat::UpdateOther()
+{
+	//时间未到
+	if (m_NowContinueTime < m_ContinueTime)	return;
+	//时间已到
+	switch (m_OtherStatus)
+	{
+		case CatOtherStatus::Lie:
+		{
+			//65%会从lie变为boringlie，35%保持原样
+			vector<CatOtherStatus> vStatus = { CatOtherStatus::Lie, CatOtherStatus::BoringLie };
+			vector<UINT> vProbability = { 35,65 };
+			m_OtherStatus = GetRange(vStatus, vProbability);
+		}
+		break;
+		default:
+			m_OtherStatus = CatOtherStatus::None;
+	}
+	OutputDebugString(L"设置动作\n");
+	//设置动作
+	AutoSetOtherStatus();
+}
+void Cat::OnClick()
+{
+	Scared();
 }
 
 void Cat::WalkTo(const LPoint& destination)
@@ -228,7 +321,54 @@ UINT Cat::GetAnimationDataDirection()
 		case CatDirection::BackRight:	return	Cat_BackRight_Idle;
 	}
 }
+Cat::CatDirection Cat::GetAnimationHorizontal()
+{
+	switch (m_Direction)
+	{
+		case CatDirection::Front:
+		case CatDirection::Right:
+		case CatDirection::FrontRight:
+		case CatDirection::BackRight:		return CatDirection::Right;
+		case CatDirection::Back:
+		case CatDirection::Left:
+		case CatDirection::FrontLeft:
+		case CatDirection::BackLeft:		return CatDirection::Left;
+	}
+}
+Cat::CatDirection Cat::GetAnimationVertical()
+{
+	switch (m_Direction)
+	{
+		case CatDirection::Front:
+		case CatDirection::FrontLeft:
+		case CatDirection::FrontRight:
+		case CatDirection::Right:			return CatDirection::Front;
+		case CatDirection::Back:
+		case CatDirection::BackLeft:
+		case CatDirection::BackRight:
+		case CatDirection::Left:			return CatDirection::Back;
+	}
+}
 
+void Cat::AutoSetOtherStatus()
+{
+	switch (m_OtherStatus)
+	{
+		case CatOtherStatus::Sleep:		this->Sleep(rand() % Cat_Sleep_Style);							break;	//睡觉
+		case CatOtherStatus::Scared:	Scared();														break;	//惊吓
+		case CatOtherStatus::Lie:		Lie(0, Range(Cat_LongLieTime_Min, Cat_LongLieTime_Max));		break;	//趴下
+		case CatOtherStatus::BoringLie:	BoringLie(Range(Cat_LongLieTime_Min, Cat_LongLieTime_Max));		break;	//无聊地趴下
+		case CatOtherStatus::Dig:		Dig(Range(Cat_LongDigTime_Min, Cat_LongDigTime_Max));			break;	//背对画圈圈
+		case CatOtherStatus::Lick:		Lick(Range(Cat_LongLickTime_Min, Cat_LongLickTime_Max));		break;	//舔爪子
+		case CatOtherStatus::Paw:		Paw(1);															break;	//抓虫子
+		case CatOtherStatus::Relaex:	Relaex(Range(Cat_LongRelaexTime_Min, Cat_LongRelaexTime_Max));	break;	//四脚朝天
+		case CatOtherStatus::Sniff:		Sniff(Range(Cat_LongSniffTime_Min, Cat_LongSniffTime_Max));		break;	//闻
+		case CatOtherStatus::Stretch:	Stretch();														break;	//伸懒腰
+		case CatOtherStatus::Sway:		Sway(Range(Cat_LongSwayTime_Min, Cat_LongSwayTime_Max));		break;	//兴奋
+		case CatOtherStatus::Attack:	Attack(1);														break;	//攻击
+		case CatOtherStatus::None:		Sit(Range(Cat_LongSitTime_Min, Cat_LongSitTime_Max));			break;	//坐姿
+	}
+}
 
 void Cat::Call()
 {
@@ -239,122 +379,126 @@ void Cat::Call()
 	string Path = ParentPath + GetName() + Music_Whistle;
 	vector<wstring> FilePath = { string2wstring(Path) };
 	PlayMusic(FilePath);
+	//这是被命令的
+	m_isCommand = true;
 }
-
-void Cat::Sit()
+void Cat::Scared()
 {
-	m_GlassWndow->StopMove();
-	//获取动画方向行数
-	UINT FileLine = GetAnimationDataDirection();
-	//切换坐姿
-	AddFrontAnimation(FileLine + Cat_Idel_To_Sit, static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Sit, CatMotionStatus::None);
-	//播放猫声音
-	string Path = ParentPath + GetName() + Music_CatReply;
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = Horizontal == CatDirection::Right ? 1 : 0;
+	m_ContinueTime = AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Scared) + Offset);
+	m_OtherStatus = CatOtherStatus::Scared;
+	//播放惊吓声
+	string Path = ParentPath + GetName() + Music_Scared;
 	vector<wstring> FilePath = { string2wstring(Path) };
 	PlayMusic(FilePath);
 }
 
-//
-//Cat* Cat::create(string& _SpriteName, string _Suffix, LPoint& _Size)
-//{
-//	Cat* pet = new Cat();
-//	if (pet->init(_SpriteName, _Suffix, _Size))
-//		return pet;
-//	delete pet;
-//	return pet = nullptr;
-//}
-//
-//void Cat::release(Cat** _pet)
-//{
-//	if (!(*_pet))	return;
-//	(*_pet)->release();
-//	delete* _pet;
-//	*_pet = nullptr;
-//}
-//
-//Cat::Cat() :m_Animation(nullptr), m_IdelTime(nullptr)
-//{
-//
-//}
-//
-//bool Cat::init(string& _SpriteName, string _Suffix, LPoint& _Size)
-//{
-//	if (!LSprite::init(_SpriteName, _Suffix, _Size))
-//	{
-//		OutputDebugString(L"初始化失败\n");
-//		return false;
-//	}
-//	m_IdelTime = LTimerManager::instance->createTimer(Cat_Idel_TimerID);
-//	return true;
-//}
-//
-//void Cat::release()
-//{
-//	Animation::release(&m_Animation);
-//	LTimerManager::instance->releaseTimer(Cat_Idel_TimerID);
-//	LSprite::release();
-//}
-//
-//void Cat::Draw(ID2D1HwndRenderTarget* pRT)
-//{
-//	LSprite::Draw(pRT);
-//}
-//
-//void Cat::Update()
-//{
-//	LSprite::Update();
-//	if (Animation->GetisEnd())
-//	{
-//		m_Window->StopMove();		//停止窗口运动
-//		Idel();
-//		m_IdelTime->BeginTiming();	//开始计时发呆时间
-//	}
-//}
-//
-//void Cat::PlayAnimation(int _PlayPosition, LAnimation::LAnimationStyle _Style, DWORD _Val, HousePetDirection _Direction)
-//{
-//	if (m_Animation == nullptr)
-//		m_Animation = Animation::create(this);
-//	m_Direction = _Direction;
-//	m_Animation->Cutover(_PlayPosition, _Style, _Val);
-//}
-//
-//void Cat::AI()
-//{
-//	m_IdelTime->EndTiming();			//结束计时发呆时间
-//	DWORD IdelTime = m_IdelTime->GetRefreshInterval();	//获取发呆时间
-//	if (IdelTime > 1000)				//如果发呆时间超过此时间
-//		PlayAnimation(HPA::Attack, LAnimation::LAnimationStyle::Cycle, 1, HousePetDirection::Left);
-//}
-//
-//void Cat::Idel()
-//{
-//	switch (m_Direction)
-//	{
-//		case HousePetDirection::Top:
-//			PlayAnimation(HPA::TopIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::Top);
-//			break;
-//		case HousePetDirection::Bottom:
-//			PlayAnimation(HPA::BottomIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::Bottom);
-//			break;
-//		case HousePetDirection::Left:
-//			PlayAnimation(HPA::LeftIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::Left);
-//			break;
-//		case HousePetDirection::Right:
-//			PlayAnimation(HPA::RightIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::Right);
-//			break;
-//		case HousePetDirection::LeftTop:
-//			PlayAnimation(HPA::LeftTopIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::LeftTop);
-//			break;
-//		case HousePetDirection::RightTop:
-//			PlayAnimation(HPA::RightTopIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::RightTop);
-//			break;
-//		case HousePetDirection::LeftBottom:
-//			PlayAnimation(HPA::LeftBottomIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::LeftBottom);
-//			break;
-//		case HousePetDirection::RightBottom:
-//			PlayAnimation(HPA::RightBottomIdel, LAnimation::LAnimationStyle::UnTime, 0, HousePetDirection::RightBottom);
-//			break;
-//	}
-//	m_PetMode = HousePetMode::Idel;		//设置站立模式
-//}
+void Cat::Idel()
+{
+	//添加一个站立动画
+	AddFrontAnimation(GetAnimationDataDirection(), static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Idel, CatMotionStatus::None);
+	//随机一个猫的发呆时间
+	m_ContinueTime = rand() % (Cat_LongIdelTime_Max - Cat_LongIdelTime_Min) + Cat_LongIdelTime_Min;
+	LPoint Area = { static_cast<float>(0), static_cast<float>(GetAnimationDataDirection() - FileData_Animation_BeginLine) };
+	SetDrawArea(Area);
+}
+void Cat::Sit(UINT addValue)
+{
+	m_GlassWndow->StopMove();
+	//获取动画方向行数
+	UINT FileLine = GetAnimationDataDirection();
+	//坐姿持续时间
+	m_ContinueTime = addValue;
+	//切换坐姿
+	AddFrontAnimation(FileLine + Cat_Idel_To_Sit, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue, CatStatus::Sit, CatMotionStatus::None);
+}
+void Cat::Sleep(UINT sleepStyle)
+{
+	//睡觉持续时间
+	m_ContinueTime = 0;
+	//计算偏移
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offest = (Horizontal == CatDirection::Right ? 1 : 0) + (2 * sleepStyle);
+	//切换睡觉
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Sleep) + Offest, static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Other, CatMotionStatus::None);
+}
+void Cat::Lie(UINT lieStyle, UINT addValue)
+{
+	//躺下持续时间
+	m_ContinueTime = addValue;
+	//获取水平方向	若向右需要进行偏移
+	CatDirection Horizontal = GetAnimationHorizontal();
+	//根据方向偏移行数
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0) + (2 * lieStyle);
+	//切换躺下
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Lie) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::BoringLie(UINT addValue)
+{
+	Lie(1, addValue);
+}
+void Cat::Dig(UINT addValue)
+{
+	m_ContinueTime = addValue;
+	//获取水平方向	若向右需要进行偏移
+	CatDirection Horizontal = GetAnimationHorizontal();
+	//根据方向偏移行数
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Dig) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Lick(UINT addValue)
+{
+	m_ContinueTime = addValue;
+	//舔爪子只有1个方向，所以不用获取方向
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Lick), static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Paw(UINT addValue)
+{
+	//这是是周期，时间是不需要算的
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Paw) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Cycle), addValue);
+}
+void Cat::Relaex(UINT addValue)
+{
+	m_ContinueTime = addValue;
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Relaex) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Scratch(UINT addValue)
+{
+	m_ContinueTime = addValue;
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Scratch) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Sniff(UINT addValue)
+{
+	m_ContinueTime = addValue;
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Sniff) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Stretch()
+{
+	//不需要计时，因为他是周期
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Stretch) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Cycle), 1);
+}
+void Cat::Sway( UINT addValue)
+{
+	m_ContinueTime = addValue;
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Sway) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
+}
+void Cat::Attack(UINT addValue)
+{
+	//这是周期，时间是需要要算的
+	CatDirection Horizontal = GetAnimationHorizontal();
+	int Offset = (Horizontal == CatDirection::Right ? 1 : 0);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Stretch) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Cycle), addValue);
+}

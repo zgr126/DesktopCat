@@ -50,6 +50,8 @@ void Lin::FractureFront(string& str, const char mark)
 
 string Lin::GetFirst(string& str, const char mark)
 {
+	OutputDebugString(string2wstring(str).c_str());
+	OutputDebugString(L"\n");
 	//第一个字符一定是mark，所以从第二个字符开始
 	auto iter = find(str.begin() + 1, str.end(), mark);
 	string First(str.begin() + 1, iter);

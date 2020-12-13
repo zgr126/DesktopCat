@@ -98,9 +98,11 @@ LRESULT CALLBACK GlassWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		case WM_LBUTTONDOWN:
 			//GW->WindowMoveArc({ 100,100 }, 360, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
 			//GW->GetPet()->WalkBy(LPoint{ 400,0 });
+			GW->GetCat()->Scared();
 			break;
 		case WM_RBUTTONDOWN: 
-			GW->WindowMoveTo({ 400,150 }, 1000);
+			//GW->WindowMoveTo({ 400,150 }, 1000);
+			GW->WindowMoveArc({ 100,100 }, 180, 300, 1000, GlassWindow::TrunStyle::Counterclockwise);
 			break;
 		case WM_SIZE: {
 			LONG_PTR Style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
@@ -190,8 +192,8 @@ void GlassWindow::initTray()
 	m_Tray.uID = ID_TRAY;
 	m_Tray.uFlags = NIF_GUID | NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	m_Tray.uCallbackMessage = WM_TrayMessage;		//自定义的消息名称
-	m_Tray.hIcon = LoadIcon(m_Window->GetWindowWndClass().hInstance, MAKEINTRESOURCE(IDI_SMALL));		//托盘图标
-	wsprintf(m_Tray.szTip, TEXT("Cat!"));
+	m_Tray.hIcon = LoadIcon(m_Window->GetWindowWndClass().hInstance, MAKEINTRESOURCE(IDI_LOGO));		//托盘图标
+	wsprintf(m_Tray.szTip, TEXT("喵~!"));
 
 	Shell_NotifyIcon(NIM_ADD, &m_Tray);//在托盘区添加图标
 }

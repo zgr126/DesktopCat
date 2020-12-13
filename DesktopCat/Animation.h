@@ -108,12 +108,13 @@ private:
 
 public:
 	//播放文件中第countLine行动画。后面2个参数可以不使用代码就能指定动画类型及追加参数。能实现随机走路跑步。使用AnimationData.txt是做不到随机的
-	bool PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle = LAnimation::LAnimationStyle::None, UINT addValue = 0);
+	UINT PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle = LAnimation::LAnimationStyle::None, UINT addValue = 0);	//返回附加数据addValue
 
 	//访问器
 	bool GetisEnd() { return m_isEnd; }
 	LAnimationStyle GetAnimationStyle() { return m_AnimationStyle.m_Val; }
 	UINT GetActionTextLine() { return  m_ActionTextLine.m_Val; }
+	UINT GetAddValue() { return m_AddValue.m_Val; }
 
 	friend class LSprite;
 };

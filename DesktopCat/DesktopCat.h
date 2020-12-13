@@ -23,3 +23,4 @@ using namespace std;
 
 #define Music_Whistle		"\\╢╣©зиз.wav"
 #define Music_CatReply		"\\ц╗╫пиЫ.wav"
+#define Music_Scared		"\\╬╙ое.wav"

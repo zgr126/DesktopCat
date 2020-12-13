@@ -176,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="DesktopCat.ico" />
+    <Image Include="Logo.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

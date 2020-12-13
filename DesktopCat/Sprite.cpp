@@ -80,8 +80,6 @@ void LSprite::Update()
 		//删除计时器
 		LTimerManager::instance->releaseTimer(m_AnimationTimerID);
 		m_AnimationTimer = nullptr;
-		//取(0,0)
-		SetDrawArea(LPoint(0));
 		return;
 	}
 	//如果当前的AnimationFront指针不是队列的Front。则代表需要重新创建一个Timer借给新的Animation使用
@@ -101,8 +99,6 @@ void LSprite::Update()
 		m_AnimationFront = m_AnimationDeque.front();
 		//动画开始回调
 		CallAnimationBegin();
-		//每进入这个if语句，说明新的Animation即将开始，所以在此处创建Action
-		m_Action = LAction::create(this, m_AnimationFront->GetActionTextLine());		//Action运行原理是直接移动窗口，不需要移动精灵。在GlassWindow中更新窗口位置。
 	}
 	if (m_AnimationFront)
 	{
@@ -111,12 +107,6 @@ void LSprite::Update()
 		//如果动画生命结束，则不更新调用SetDrawArea
 		if (m_AnimationFront->GetisEnd())
 		{
-			//将第一个动画释放并删除
-			auto FutileAnimation = m_AnimationDeque.front();
-			LAnimation::release(&FutileAnimation);
-			m_AnimationDeque.pop_front();
-			//释放动画的同时释放Action数据
-			LAction::release(&m_Action);
 			CallAnimationEnd();		//动画结束回调
 			return;
 		}
@@ -135,27 +125,21 @@ HRESULT LSprite::LoadingImage(LPCTSTR fileName, ID2D1RenderTarget* pRT, IWICImag
 	return hr;
 }
 
-void LSprite::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue)
+UINT LSprite::AddFrontAnimation(UINT fileLine, int animationStyle, UINT addValue)
 {
 	//创建之前若已有动画在播放，则释放该动作
 	if (m_AnimationDeque.size() > 0)
 	{
-		auto FrontAnimation = m_AnimationDeque.front();
-		LAnimation::release(&FrontAnimation);
-		m_AnimationDeque.pop_front();
-		LAction::release(&m_Action);
 		CallAnimationInterrupt();
 	}
-	OutputDebugString(L"创建第");
-	OutputDebugString(to_wstring(fileLine).c_str());
-	OutputDebugString(L"\n");
 	//创建一个动画
 	auto Animation = LAnimation::create(this);
 	//指定动画数据
-	Animation->PlayAnimation(fileLine, LAnimation::LAnimationStyle(animationStyle), addValue);
-
+	addValue = Animation->PlayAnimation(fileLine, LAnimation::LAnimationStyle(animationStyle), addValue);
+	m_AnimationFront = nullptr;
 	//将动画添加进队列最前面
 	m_AnimationDeque.push_front(Animation);
+	return addValue;
 }
 
 void LSprite::AddBackAnimation(UINT fileLine)
@@ -174,22 +158,31 @@ void LSprite::AddBackAnimation(UINT fileLine)
 	auto Animation = LAnimation::create(this);
 	//指定动画数据
 	Animation->PlayAnimation(fileLine);
-
+	m_AnimationFront = nullptr;
 	//将动画添加进队列最后面
 	m_AnimationDeque.push_back(Animation);
 }
 
 void LSprite::CallAnimationBegin()
 {
-	OutputDebugString(L"Sprite:动画开始\n");
+	//每进入这个方法，说明新的Animation即将开始，所以在此处创建Action
+	m_Action = LAction::create(this, m_AnimationFront->GetActionTextLine());		//Action运行原理是直接移动窗口，不需要移动精灵。在GlassWindow中更新窗口位置。
 }
 void LSprite::CallAnimationEnd()
 {
-	OutputDebugString(L"Sprite:动画结束\n");
+	//将第一个动画释放并删除
+	auto FutileAnimation = m_AnimationDeque.front();
+	LAnimation::release(&FutileAnimation);
+	m_AnimationDeque.pop_front();
+	//释放动画的同时释放Action数据
+	LAction::release(&m_Action);
 }
 void LSprite::CallAnimationInterrupt()
 {
-	OutputDebugString(L"Sprite::动画被打断\n");
+	auto FrontAnimation = m_AnimationDeque.front();
+	LAnimation::release(&FrontAnimation);
+	m_AnimationDeque.pop_front();
+	LAction::release(&m_Action);
 }
 
 void LSprite::SetDrawArea(LPoint& ranks)

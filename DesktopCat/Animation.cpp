@@ -68,14 +68,14 @@ void LAnimation::AfterTheAnimationOfSpriteInit()
 	m_AnimationStyle.m_Val = LAnimationStyle::None;
 }
 
-bool LAnimation::PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle animationStyle, UINT addValue)
+UINT LAnimation::PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle animationStyle, UINT addValue)
 {
 	LFile* pFile = LFile::AddToFilePool(m_AnimationDataFilePath);		//打开文件
 	//开始读取数据
 	string EntireData = LReadFileLine(pFile, fileLine);		//文件的第fileLine行全部数据
 	FractureBack(EntireData, DataMarkerEnd);				//去掉@后面的数据
-	OutputDebugString(string2wstring(EntireData).c_str());
-	OutputDebugString(L"\n");
+	//OutputDebugString(string2wstring(EntireData).c_str());
+	//OutputDebugString(L"\n");
 	//读取第0个数据		图片第几行
 	string SingalData = GetFirst(EntireData, DataMarker);
 	m_CountLine = LDataConversion<UINT>::Conversion(SingalData);
@@ -109,16 +109,24 @@ bool LAnimation::PlayAnimation(UINT fileLine, LAnimation::LAnimationStyle animat
 	//进行数据审查
 	Censor();
 	BeforeTheAnimationOfSpriteInit();
+	return m_AddValue.m_Val;
 }
 
 LPoint LAnimation::Update(LTimer* animationTimer)
 {
-	//动画生命结束	等待被释放
-	if (m_isEnd)	return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val, static_cast<float>(m_CountLine.m_Val)));
-	//先判断动画类型由时间主导的情况
-	if (!animationTimer || !isTime(animationTimer->GetInterval()))
+	if (animationTimer == nullptr)
 	{
-		return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val, static_cast<float>(m_CountLine.m_Val)));
+		return LPoint(static_cast<float>(m_vPlayOrder[0].m_Val), static_cast<float>(m_CountLine.m_Val));
+	}
+	//动画生命结束	等待被释放
+	if (m_isEnd)
+	{
+		return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val), static_cast<float>(m_CountLine.m_Val));
+	}
+	//先判断动画类型由时间主导的情况
+	if (!isTime(animationTimer->GetInterval()))
+	{
+		return	LPoint(static_cast<float>(m_vPlayOrder[0].m_Val), static_cast<float>(m_CountLine.m_Val));
 	}
 	//帧停留时间累加
 	m_NowFrameStayTime += animationTimer->GetInterval();
