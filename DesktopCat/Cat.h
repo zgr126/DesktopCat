@@ -73,32 +73,32 @@
 
 #pragma region 猫的Other动作时间范围
 //猫发呆一次时间的范围
-#define Cat_LongIdelTime_Min	4000
-#define Cat_LongIdelTime_Max	8500
+#define Cat_LongIdelTime_Min	3500
+#define Cat_LongIdelTime_Max	8000
 //猫久坐的时间范围
-#define Cat_LongSitTime_Min		10000
+#define Cat_LongSitTime_Min		12000
 #define Cat_LongSitTime_Max		30000
 //猫躺下的时间范围
 #define Cat_LongLieTime_Min		10000
-#define Cat_LongLieTime_Max		30000
+#define Cat_LongLieTime_Max		25000
 //猫背对画圈圈的时间范围
 #define Cat_LongDigTime_Min		10000
-#define Cat_LongDigTime_Max		30000
+#define Cat_LongDigTime_Max		25000
 //猫舔爪子的时间范围
 #define Cat_LongLickTime_Min	10000
 #define Cat_LongLickTime_Max	30000
 //猫四角朝天的时间范围
-#define Cat_LongRelaexTime_Min	10000
-#define Cat_LongRelaexTime_Max	30000
+#define Cat_LongRelaexTime_Min	7000
+#define Cat_LongRelaexTime_Max	20000
 //抓地板的时间范围
 #define Cat_LongScratchTime_Min	3000
 #define Cat_LongScratchTime_Max	12000
 //闻的时间范围
 #define Cat_LongSniffTime_Min	2000
-#define Cat_LongSniffTime_Max	7000
+#define Cat_LongSniffTime_Max	4500
 //兴奋的时间范围
 #define Cat_LongSwayTime_Min	1500
-#define Cat_LongSwayTime_Max	4000
+#define Cat_LongSwayTime_Max	2500
 #pragma endregion
 //猫睡觉样式
 #define Cat_Sleep_Style	3
@@ -122,9 +122,11 @@
 #define LongSit_To_Relaex_Probability	20		//久坐后四角朝天的概率
 #define LongSit_To_Sleep_Probability	5		//久坐后睡觉的概率
 //站立时被点击发生一些事情的概率
-#define OnClick_Idel_To_Sniff_Probability	35	//站立时被点击，触发闻的概率
-#define OnClick_Idel_To_Lie_Probability		25	//站立时被点击，触发趴下的概率
-#define OnClick_Idel_To_Relaex_Probability	30	//站立时被点击，触发四角朝天的概率
+#define OnClick_Idel_To_Sniff_Probability	20	//站立时被点击，触发闻的概率
+#define OnClick_Idel_To_Lie_Probability		10	//站立时被点击，触发趴下的概率
+#define OnClick_Idel_To_Relaex_Probability	10	//站立时被点击，触发四角朝天的概率
+#define OnClick_Idel_To_Sway_Probability	30	//站立时被点击，触发兴奋的概率
+#define OnClick_Idel_To_Attack_Probability	30	//站立时被点击，触发攻击的概率
 //坐下时被点击发生一些事情的概率
 #define OnClick_Sit_To_Stretch_Probability	50	//坐下时被点击，触发伸懒腰的概率
 #define OnClick_Sit_To_Scared_Probability	50	//坐下时被点击，触发惊吓的概率

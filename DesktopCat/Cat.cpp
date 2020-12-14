@@ -104,7 +104,11 @@ void Cat::CallAnimationEnd()
 	LSprite::CallAnimationEnd();
 	if (m_OtherStatus == CatOtherStatus::Stretch)
 	{
-		Sit(Range(Cat_LongSitTime_Min, Cat_LongSitTime_Max));
+		Idel();
+	}
+	if (m_OtherStatus == CatOtherStatus::Attack)
+	{
+		Idel();
 	}
 }
 void Cat::CallAnimationInterrupt()
@@ -228,11 +232,12 @@ void Cat::UpdateOther()
 		break;
 		//惊吓后站立
 		case CatOtherStatus::Scared:
+		//伸懒腰后站立
+		case CatOtherStatus::Stretch:
 		case CatOtherStatus::Sniff: 
 		{
 			//闻完后站立
 			Idel();
-			m_OtherStatus = CatOtherStatus::None;
 			return;
 		}
 		break;
@@ -249,8 +254,8 @@ void Cat::OnClick()
 		//站立时被点击
 		case CatStatus::Idel:
 		{
-			vector<CatOtherStatus> vOtherStatus = { CatOtherStatus::Sniff, CatOtherStatus::Lie, CatOtherStatus::Relaex };
-			vector<UINT> vProbability = { OnClick_Idel_To_Sniff_Probability, OnClick_Idel_To_Lie_Probability, OnClick_Idel_To_Relaex_Probability };
+			vector<CatOtherStatus> vOtherStatus = { CatOtherStatus::Sniff, CatOtherStatus::Lie, CatOtherStatus::Relaex, CatOtherStatus::Sway, CatOtherStatus::Attack };
+			vector<UINT> vProbability = { OnClick_Idel_To_Sniff_Probability, OnClick_Idel_To_Lie_Probability, OnClick_Idel_To_Relaex_Probability, OnClick_Idel_To_Sway_Probability, OnClick_Idel_To_Attack_Probability };
 			m_OtherStatus = GetRange(vOtherStatus, vProbability);
 			AutoSetOtherStatus();
 		}
@@ -259,13 +264,6 @@ void Cat::OnClick()
 			break;
 		case CatStatus::Sit:
 		{
-			if (m_NowContinueTime <= m_ContinueTime * 0.5)
-			{
-				//如果坐的时间不够久，直接站立
-				m_OtherStatus = CatOtherStatus::None;
-				Idel();
-				break;
-			}
 			vector<CatOtherStatus> vOtherStatus = { CatOtherStatus::Stretch, CatOtherStatus::Scared };
 			vector<UINT> vProbability = { OnClick_Sit_To_Stretch_Probability, OnClick_Sit_To_Scared_Probability };
 			m_OtherStatus = GetRange(vOtherStatus, vProbability);
@@ -433,10 +431,10 @@ void Cat::Call()
 }
 void Cat::Scared()
 {
+	m_OtherStatus = CatOtherStatus::Scared;
 	m_Direction = GetAnimationHorizontal();
 	int Offset = m_Direction == CatDirection::Right ? 1 : 0;
 	m_ContinueTime = AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Scared) + Offset);
-	m_OtherStatus = CatOtherStatus::Scared;
 	//播放惊吓声
 	string Path = ParentPath + GetName() + Music_Scared;
 	vector<wstring> FilePath = { string2wstring(Path) };
@@ -445,6 +443,7 @@ void Cat::Scared()
 
 void Cat::Idel()
 {
+	m_OtherStatus = CatOtherStatus::None;
 	//添加一个站立动画
 	AddFrontAnimation(GetAnimationDataDirection(), static_cast<int>(LAnimation::LAnimationStyle::UnTime), 0, CatStatus::Idel, CatMotionStatus::None);
 	//随机一个猫的发呆时间
@@ -455,6 +454,7 @@ void Cat::Idel()
 }
 void Cat::Sit(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::None;
 	m_GlassWndow->StopMove();
 	//获取动画方向行数
 	UINT FileLine = GetAnimationDataDirection();
@@ -466,6 +466,7 @@ void Cat::Sit(UINT addValue)
 }
 void Cat::Sleep(UINT sleepStyle)
 {
+	m_OtherStatus = CatOtherStatus::Sleep;
 	//睡觉持续时间
 	m_ContinueTime = 0;
 	//计算偏移
@@ -477,6 +478,7 @@ void Cat::Sleep(UINT sleepStyle)
 }
 void Cat::Lie(UINT lieStyle, UINT addValue)
 {
+	m_OtherStatus = static_cast<CatOtherStatus>(static_cast<int>(CatOtherStatus::Lie) + lieStyle);
 	//躺下持续时间
 	m_ContinueTime = addValue;
 	//获取水平方向	若向右需要进行偏移
@@ -493,6 +495,7 @@ void Cat::BoringLie(UINT addValue)
 }
 void Cat::Dig(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Dig;
 	m_ContinueTime = addValue;
 	//获取水平方向	若向右需要进行偏移
 	CatDirection Horizontal = GetAnimationHorizontal();
@@ -503,6 +506,7 @@ void Cat::Dig(UINT addValue)
 }
 void Cat::Lick(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Lick;
 	m_ContinueTime = addValue;
 	//舔爪子只有1个方向，所以不用获取方向
 	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Lick), static_cast<int>(LAnimation::LAnimationStyle::Time), addValue);
@@ -511,6 +515,7 @@ void Cat::Lick(UINT addValue)
 }
 void Cat::Paw(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Paw;
 	//这是是周期，时间是不需要算的
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -519,6 +524,7 @@ void Cat::Paw(UINT addValue)
 }
 void Cat::Relaex(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Relaex;
 	m_ContinueTime = addValue;
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -527,6 +533,7 @@ void Cat::Relaex(UINT addValue)
 }
 void Cat::Scratch(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Scratch;
 	m_ContinueTime = addValue;
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -535,6 +542,7 @@ void Cat::Scratch(UINT addValue)
 }
 void Cat::Sniff(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Sniff;
 	m_ContinueTime = addValue;
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -543,6 +551,7 @@ void Cat::Sniff(UINT addValue)
 }
 void Cat::Stretch()
 {
+	m_OtherStatus = CatOtherStatus::Stretch;
 	//不需要计时，因为他是周期
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -551,6 +560,7 @@ void Cat::Stretch()
 }
 void Cat::Sway( UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Sway;
 	m_ContinueTime = addValue;
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
@@ -559,9 +569,10 @@ void Cat::Sway( UINT addValue)
 }
 void Cat::Attack(UINT addValue)
 {
+	m_OtherStatus = CatOtherStatus::Attack;
 	//这是周期，时间是需要要算的
 	m_Direction = GetAnimationHorizontal();
 	int Offset = (m_Direction == CatDirection::Right ? 1 : 0);
-	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Stretch) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Cycle), addValue);
+	AddFrontAnimation(static_cast<UINT>(CatOtherStatus::Attack) + Offset, static_cast<int>(LAnimation::LAnimationStyle::Cycle), addValue);
 	OutputDebugString(L"攻击\n");
 }
