@@ -110,6 +110,11 @@ void Cat::CallAnimationEnd()
 	{
 		Idel();
 	}
+	//如果队列为空，则默认一个站立动画
+	if (m_AnimationDeque.size() == 0 && m_Status == CatStatus::Test)
+	{
+		Idel();
+	}
 }
 void Cat::CallAnimationInterrupt()
 {

@@ -40,6 +40,7 @@ void LWindowEx::Show(int _CmdShow, POINT postion)
 	//m_WndEx.hIcon = LoadIcon(m_WndEx.hInstance, MAKEINTRESOURCE(IDI_LOGO));
 	m_WndEx.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	m_WndEx.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+
 	///窗口注册类名已在SetClassName实现了
 	//m_WndEx.hIconSm = LoadIcon(m_WndEx.hInstance, MAKEINTRESOURCE(IDI_LOGO));
 
@@ -246,6 +247,14 @@ void GlassWindow::MoveWindowPosition(const LPoint& destination)
 void GlassWindow::runrelay(int _CmdShow)
 {
 	m_Window->Show(_CmdShow, { 0,0 });
+	//HBRUSH brush;
+	//HDC dc = GetDC(m_Window->GetWindowHWND());
+	//brush = (HBRUSH)GetStockObject(DC_BRUSH);//参数必须是 DC_BURSH
+
+	//SelectObject(dc, brush);//载入设备
+
+	//SetDCBrushColor(dc, RGB(255, 255, 255));//成功修改画刷颜色。哇嘎嘎~
+	//ReleaseDC(m_Window->GetWindowHWND(), dc);
 	LPoint Position(400,300);
 	SIZE size = m_Window->GetWindowSize();
 	MoveWindowPosition(Position);
@@ -255,15 +264,7 @@ void GlassWindow::runrelay(int _CmdShow)
 
 	HWND hwnd = m_Window->GetWindowHWND();
 	initDirect2D(hwnd);
-	//为精灵读取图片
-	string SpritePath = ParentPath + m_Cat->GetName() + "\\" + m_Cat->GetName() + m_Cat->GetSuffix();
-	m_Cat->LoadingImage(string2wstring(SpritePath).c_str(), m_pRT, m_ImageFactory);
 
-	SetLayeredWindowAttributes(
-		hwnd,
-		RGB(255, 255, 255),
-		0,
-		LWA_COLORKEY);
 
 	//创建托盘
 	initTray();
@@ -407,16 +408,17 @@ void GlassWindow::UpdateKeyInput()
 		//测试动画行
 		//m_Cat->AddFrontAnimation(60, static_cast<int>(LAnimation::LAnimationStyle::Cycle), 3, Cat::CatStatus::Other, Cat::CatMotionStatus::None);
 		//m_Cat->GetGlassWindow()->StopMove();
-		m_Cat->AddFrontAnimation(2);
+		m_Cat->AddFrontAnimation(2, 0, 0, Cat::CatStatus::Test);
 	}
 	F4Key = KEY_DOWM(VK_F4);
-	static int ControlKey = 0;
-	if (ControlKey && !KEY_DOWM(VK_CONTROL))
+	//F3呼叫猫
+	static int F3Key = 0;
+	if (F3Key && !KEY_DOWM(VK_F3))
 	{
 		//呼叫猫
 		m_Cat->Call();
 	}
-	ControlKey = KEY_DOWM(VK_CONTROL);
+	F3Key = KEY_DOWM(VK_F3);
 
 }
 

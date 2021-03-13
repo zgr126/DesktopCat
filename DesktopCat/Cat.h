@@ -159,6 +159,7 @@ public:
 	//猫状态枚举
 	enum class CatStatus
 	{
+		Test,		//测试
 		Idel,		//站立
 		Motion,		//走路或跑步
 		Sit,		//坐下
