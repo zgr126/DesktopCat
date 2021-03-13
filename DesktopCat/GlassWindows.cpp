@@ -4,6 +4,8 @@
 
 using namespace Lin;
 
+#define KK_F3	0x7B
+
 #pragma region ´°¿ÚÀàLWindowEx
 LWindowEx* LWindowEx::instance = nullptr;
 
@@ -255,7 +257,7 @@ void GlassWindow::runrelay(int _CmdShow)
 
 	//SetDCBrushColor(dc, RGB(255, 255, 255));//³É¹¦ÐÞ¸Ä»­Ë¢ÑÕÉ«¡£ÍÛ¸Â¸Â~
 	//ReleaseDC(m_Window->GetWindowHWND(), dc);
-	LPoint Position(400,300);
+	LPoint Position(-400,300);
 	SIZE size = m_Window->GetWindowSize();
 	MoveWindowPosition(Position);
 	SetWindowSize({ static_cast<float>(size.cx), static_cast<float>(size.cy) });
@@ -264,7 +266,15 @@ void GlassWindow::runrelay(int _CmdShow)
 
 	HWND hwnd = m_Window->GetWindowHWND();
 	initDirect2D(hwnd);
+	//Îª¾«Áé¶ÁÈ¡Í¼Æ¬
+	string SpritePath = ParentPath + m_Cat->GetName() + "\\" + m_Cat->GetName() + m_Cat->GetSuffix();
+	m_Cat->LoadingImage(string2wstring(SpritePath).c_str(), m_pRT, m_ImageFactory);
 
+	SetLayeredWindowAttributes(
+		hwnd,
+		RGB(255, 255, 255),
+		0,
+		LWA_COLORKEY);
 
 	//´´½¨ÍÐÅÌ
 	initTray();
@@ -413,12 +423,12 @@ void GlassWindow::UpdateKeyInput()
 	F4Key = KEY_DOWM(VK_F4);
 	//F3ºô½ÐÃ¨
 	static int F3Key = 0;
-	if (F3Key && !KEY_DOWM(VK_F3))
+	if (F3Key && !KEY_DOWM(KK_F3))
 	{
 		//ºô½ÐÃ¨
 		m_Cat->Call();
 	}
-	F3Key = KEY_DOWM(VK_F3);
+	F3Key = KEY_DOWM(KK_F3);
 
 }
 
