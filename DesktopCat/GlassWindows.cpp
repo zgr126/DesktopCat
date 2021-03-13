@@ -4,6 +4,7 @@
 
 using namespace Lin;
 
+#define VK_F3	0x7B
 
 #pragma region 窗口类LWindowEx
 LWindowEx* LWindowEx::instance = nullptr;
@@ -256,7 +257,7 @@ void GlassWindow::runrelay(int _CmdShow)
 
 	//SetDCBrushColor(dc, RGB(255, 255, 255));//成功修改画刷颜色。哇嘎嘎~
 	//ReleaseDC(m_Window->GetWindowHWND(), dc);
-	LPoint Position(400,300);
+	LPoint Position(-400,300);
 	SIZE size = m_Window->GetWindowSize();
 	MoveWindowPosition(Position);
 	SetWindowSize({ static_cast<float>(size.cx), static_cast<float>(size.cy) });
@@ -265,15 +266,7 @@ void GlassWindow::runrelay(int _CmdShow)
 
 	HWND hwnd = m_Window->GetWindowHWND();
 	initDirect2D(hwnd);
-	//为精灵读取图片
-	string SpritePath = ParentPath + m_Cat->GetName() + "\\" + m_Cat->GetName() + m_Cat->GetSuffix();
-	m_Cat->LoadingImage(string2wstring(SpritePath).c_str(), m_pRT, m_ImageFactory);
 
-	SetLayeredWindowAttributes(
-		hwnd,
-		RGB(255, 255, 255),
-		0,
-		LWA_COLORKEY);
 
 	//创建托盘
 	initTray();
